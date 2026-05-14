@@ -1,0 +1,58 @@
+name: Deploy site with JupyterLite
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install JupyterLite
+        run: pip install jupyterlite-core==0.6.4 jupyterlite-pyodide-kernel==0.6.1
+
+      - name: Build JupyterLite
+        run: |
+          jupyter lite build \
+            --contents tutorials/notebooks \
+            --output-dir _site/tutorials/lab
+
+      - name: Copy static site assets
+        run: |
+          cp index.html _site/
+          cp photo.JPG _site/
+          cp -r photos _site/photos
+          cp tutorials/index.html _site/tutorials/index.html
+          [ -f cv.pdf ] && cp cv.pdf _site/ || true
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
