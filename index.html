@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jayden L. Newstead — Dark Matter &amp; Neutrino Physics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --accent: #1a5276;
+            --accent-light: #2e86c1;
+            --text: #222;
+            --muted: #555;
+            --border: #ddd;
+            --bg: #f8f8f6;
+            --card: #fff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 15.5px;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        nav ul {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            list-style: none;
+            display: flex;
+            gap: 0;
+        }
+
+        nav a {
+            display: block;
+            padding: 14px 16px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
+
+        nav a:hover { color: var(--accent); }
+
+        .page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        /* ── Profile header ── */
+        .profile {
+            display: flex;
+            gap: 36px;
+            align-items: flex-start;
+            margin-bottom: 48px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .profile-photo {
+            width: 160px;
+            height: 200px;
+            flex-shrink: 0;
+            border-radius: 4px;
+            background: #e4e4e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .profile-info h1 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 2rem;
+            margin: 0 0 4px;
+            color: var(--accent);
+        }
+
+        .profile-info .title {
+            font-size: 1rem;
+            color: var(--muted);
+            margin: 0 0 16px;
+        }
+
+        .profile-meta {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.9;
+        }
+
+        .profile-meta a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+
+        .profile-meta a:hover { text-decoration: underline; }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .links a {
+            display: inline-block;
+            padding: 5px 13px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-size: 0.82rem;
+            color: var(--muted);
+            text-decoration: none;
+            background: var(--card);
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .links a:hover {
+            border-color: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* ── Sections ── */
+        section { margin-bottom: 44px; }
+
+        h2 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--accent);
+            margin: 0 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        p { margin: 0 0 12px; }
+
+        /* ── Research interests ── */
+        .interest-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .interest-list li {
+            background: #eef2f7;
+            border: 1px solid #d5e2ee;
+            border-radius: 3px;
+            padding: 4px 12px;
+            font-size: 0.88rem;
+            color: var(--accent);
+        }
+
+        /* ── Publications ── */
+        .pub-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pub-list li {
+            padding: 14px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .pub-list li:last-child { border-bottom: none; }
+
+        .pub-list .pub-title {
+            font-family: 'Source Serif 4', serif;
+            font-style: italic;
+            font-size: 0.97rem;
+        }
+
+        .pub-list .pub-meta {
+            color: var(--muted);
+            font-size: 0.86rem;
+            margin-top: 3px;
+        }
+
+        .pub-list a {
+            color: var(--accent-light);
+            text-decoration: none;
+            font-size: 0.83rem;
+        }
+
+        .pub-list a:hover { text-decoration: underline; }
+
+        /* ── News ── */
+        .news-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .news-list li {
+            display: flex;
+            gap: 18px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.92rem;
+        }
+
+        .news-list li:last-child { border-bottom: none; }
+
+        .news-date {
+            color: var(--muted);
+            font-size: 0.82rem;
+            white-space: nowrap;
+            padding-top: 2px;
+            min-width: 80px;
+        }
+
+        footer {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        @media (max-width: 560px) {
+            .profile { flex-direction: column; gap: 20px; }
+            .profile-photo { width: 120px; height: 150px; }
+            .profile-info h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#research">Research</a></li>
+        <li><a href="#publications">Publications</a></li>
+        <li><a href="#news">News</a></li>
+        <li><a href="#cv">CV</a></li>
+    </ul>
+</nav>
+
+<div class="page">
+
+    <div class="profile">
+        <div class="profile-photo">
+            <img src="photo.JPG" alt="Jayden Newstead">
+        </div>
+        <div class="profile-info">
+            <h1>Jayden L. Newstead</h1>
+            <p class="title">Research Fellow &mdash; School of Physics, University of Melbourne</p>
+            <div class="profile-meta">
+                ARC Centre of Excellence for Dark Matter Particle Physics<br>
+                University of Melbourne<br>
+                Melbourne, VIC, Australia<br><br>
+                <a href="mailto:jayden.newstead@unimelb.edu.au">jayden.newstead@unimelb.edu.au</a><br>
+                Office: [Building &amp; Room Number]
+            </div>
+            <div class="links">
+                <a href="mailto:jayden.newstead@unimelb.edu.au">Email</a>
+                <a href="https://scholar.google.com/citations?user=IZQbtUwAAAAJ&hl=en">Google Scholar</a>
+                <a href="https://orcid.org/0000-0002-8704-3550">ORCID</a>
+                <a href="https://inspirehep.net/authors/1287681">INSPIRE</a>
+                <a href="https://arxiv.org/search/?searchtype=author&query=Newstead%2C+J+L">arXiv</a>
+                <a href="https://github.com/jaydenn">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <section id="about">
+        <h2>About</h2>
+        <p>
+            I am a Research Fellow in the School of Physics at the University of Melbourne and a member of the
+            ARC Centre of Excellence for Dark Matter Particle Physics. My research focuses on particle dark matter
+            phenomenology, with an emphasis on the direct detection of dark matter. I am also broadly interested
+            in searches for physics beyond the Standard Model using coherent elastic neutrino-nucleus scattering
+            (CE&nu;NS).
+        </p>
+        <p>
+            [Add further biographical detail — academic background, previous positions, etc.]
+        </p>
+    </section>
+
+    <section id="research">
+        <h2>Research Interests</h2>
+        <p>My work sits at the intersection of particle physics, nuclear physics, and astrophysics, asking what the next generation of underground detectors can tell us about dark matter and neutrinos.</p>
+        <ul class="interest-list">
+            <li>Dark matter direct detection</li>
+            <li>Coherent elastic neutrino-nucleus scattering (CE&nu;NS)</li>
+            <li>Cosmic-ray upscattered dark matter</li>
+            <li>Migdal effect</li>
+            <li>Solar &amp; atmospheric neutrinos</li>
+            <li>Astroparticle phenomenology</li>
+            <li>Beyond Standard Model physics</li>
+        </ul>
+    </section>
+
+    <section id="publications">
+        <h2>Selected Publications</h2>
+        <p>Full list on <a href="https://scholar.google.com/citations?user=IZQbtUwAAAAJ&hl=en">Google Scholar</a> (3000+ citations, h-index 25) and <a href="https://inspirehep.net/authors/1287681">INSPIRE</a>.</p>
+        <ul class="pub-list">
+            <li>
+                <div class="pub-title">"Discriminating Dark Matter Origins with Directional Detection"</div>
+                <div class="pub-meta">
+                    N. F. Bell, C. Lisotti, <strong>J. L. Newstead</strong>, C. A. J. O'Hare, I. Shaukat Ali &mdash;
+                    (2026)
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2603.10434">arXiv:2603.10434</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title">"Directional Recoil Detection for CE&nu;NS Measurements with Light Nuclei at the Spallation Neutron Source"</div>
+                <div class="pub-meta">
+                    C. A. J. O'Hare, A. C. Shekar, C. Lisotti, M. Litke, N. Mishra, <strong>J. L. Newstead</strong>, L. E. Strigari, S. E. Vahsen &mdash;
+                    (2026)
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2602.19618">arXiv:2602.19618</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title">"Dark Matter Induced Nucleon Decay Through the Neutron Portal"</div>
+                <div class="pub-meta">
+                    N. F. Bell, P. Cox, <strong>J. L. Newstead</strong>, M. B. G. Verde &mdash;
+                    (2025)
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2511.18722">arXiv:2511.18722</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title">"Enhancing DUNE's Solar Neutrino Capabilities with Neutral-Current Detection"</div>
+                <div class="pub-meta">
+                    S. A. Meighen-Berger, <strong>J. L. Newstead</strong>, J. F. Beacom, N. F. Bell, M. J. Dolan &mdash;
+                    <em>Physical Review Letters</em> (2025)
+                    &nbsp;·&nbsp; <a href="https://doi.org/10.1103/htfm-tbdq">DOI</a>
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2410.00330">arXiv:2410.00330</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title">"Detailed Nuclear Structure Calculations for Coherent Elastic Neutrino-Nucleus Scattering"</div>
+                <div class="pub-meta">
+                    R. Abdel Khaleq, <strong>J. L. Newstead</strong>, C. Simenel, A. E. Stuchbery &mdash;
+                    (2024)
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2405.20060">arXiv:2405.20060</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title">"Bounds on Cosmic Ray-Boosted Dark Matter in Simplified Models and its Corresponding Neutrino-Floor"</div>
+                <div class="pub-meta">
+                    J. B. Dent, B. Dutta, <strong>J. L. Newstead</strong>, I. M. Shoemaker &mdash;
+                    <em>Physical Review D</em> <strong>101</strong>, 116007 (2020)
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/1907.03782">arXiv:1907.03782</a>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <section id="news">
+        <h2>News</h2>
+        <ul class="news-list">
+            <li>
+                <span class="news-date">Mar 2026</span>
+                <span>New paper: <a href="https://arxiv.org/abs/2603.10434">"Discriminating Dark Matter Origins with Directional Detection"</a></span>
+            </li>
+            <li>
+                <span class="news-date">Feb 2026</span>
+                <span>New paper: <a href="https://arxiv.org/abs/2602.19618">"Directional Recoil Detection for CE&nu;NS Measurements at the Spallation Neutron Source"</a></span>
+            </li>
+            <li>
+                <span class="news-date">Nov 2025</span>
+                <span>New paper: <a href="https://arxiv.org/abs/2511.18722">"Dark Matter Induced Nucleon Decay Through the Neutron Portal"</a></span>
+            </li>
+            <li>
+                <span class="news-date">[Month Year]</span>
+                <span>[Insert update — talk, award, position, etc.]</span>
+            </li>
+        </ul>
+    </section>
+
+    <section id="cv">
+        <h2>Curriculum Vitae</h2>
+        <p><a href="cv.pdf">Download CV (PDF)</a></p>
+    </section>
+
+</div>
+
+<footer>
+    Last updated May 2026.
+</footer>
+
+</body>
+</html>
