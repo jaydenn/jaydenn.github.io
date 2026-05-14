@@ -135,48 +135,32 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            align-items: center;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 7px 16px;
+        .btn-colab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: #f9ab00;
+            color: #1a1a1a;
+            border: none;
             border-radius: 4px;
-            font-size: 0.86rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: background 0.15s, color 0.15s, border-color 0.15s;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: #fff;
-            border: 1px solid var(--accent);
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-light);
-            border-color: var(--accent-light);
-        }
-
-        .btn-secondary {
-            background: var(--card);
-            color: var(--muted);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--accent-light);
-            color: var(--accent);
-        }
-
-        .note {
-            background: #f0f4f8;
-            border-left: 3px solid var(--accent-light);
-            padding: 12px 16px;
-            border-radius: 0 4px 4px 0;
             font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .btn-colab:hover { background: #e09b00; }
+
+        .btn-colab img { height: 18px; }
+
+        .colab-note {
+            font-size: 0.82rem;
             color: var(--muted);
-            margin-bottom: 28px;
+            font-style: italic;
         }
 
         footer {
@@ -206,11 +190,6 @@
     <h1>Tutorials</h1>
     <p class="page-subtitle">Interactive computational notebooks on dark matter and particle physics.</p>
 
-    <div class="note">
-        These notebooks run entirely in your browser via JupyterLite — no installation required.
-        The Python environment loads on first launch (allow ~30 seconds for the pyodide kernel to start).
-    </div>
-
     <section>
         <h2>Dark Matter</h2>
 
@@ -218,23 +197,74 @@
             <h3>Dark Matter Freeze-out and Relic Density</h3>
             <p>
                 Compute the relic density of dark matter by numerically solving the Boltzmann equation.
-                Covers the freeze-out mechanism, thermally-averaged cross sections, and how the WIMP
-                miracle connects weak-scale interactions to the observed dark matter abundance
-                (&Omega;<sub>&chi;</sub>h&sup2; &approx; 0.12).
+                Covers the freeze-out mechanism, thermally-averaged annihilation cross sections, and how
+                weak-scale interactions give rise to the observed dark matter abundance
+                (&Omega;<sub>&chi;</sub>h&sup2;&nbsp;&asymp;&nbsp;0.12).
+                Includes exercises on the improved yield-based Boltzmann equation, relic density
+                as a function of WIMP mass, and freeze-in as an alternative production mechanism.
             </p>
             <div class="tag-list">
                 <span class="tag">Dark matter</span>
                 <span class="tag">Boltzmann equation</span>
                 <span class="tag">Cosmology</span>
-                <span class="tag">numpy · scipy · matplotlib</span>
+                <span class="tag">numpy &middot; scipy &middot; matplotlib</span>
             </div>
             <div class="btn-row">
-                <a class="btn btn-primary" href="lab/index.html?path=CDM_intro_freezeout.ipynb">
-                    Launch in JupyterLite
-                </a>
-                <a class="btn btn-secondary" href="https://colab.research.google.com/github/jaydenn/CDMPP_computing/blob/main/DM_freezeout_intro_solutions.ipynb" target="_blank" rel="noopener">
+                <a class="btn-colab"
+                   href="https://colab.research.google.com/github/jaydenn/jaydenn.github.io/blob/main/tutorials/notebooks/CDM_intro_freezeout.ipynb"
+                   target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="">
                     Open in Google Colab
                 </a>
+                <span class="colab-note">Opens a fresh copy &mdash; use &ldquo;Copy to Drive&rdquo; to save your own version.</span>
+            </div>
+        </div>
+
+        <div class="tutorial-card">
+            <h3>Frequentist and Bayesian Inference</h3>
+            <p>
+                Statistical methods for dark matter direct detection, using a simplified XENON1T-like
+                experiment as a worked example. Covers hypothesis testing, discovery and upper-limit
+                setting via frequentist test statistics, and Bayesian nested sampling with PyMultiNest.
+            </p>
+            <div class="tag-list">
+                <span class="tag">Statistics</span>
+                <span class="tag">Bayesian inference</span>
+                <span class="tag">Direct detection</span>
+                <span class="tag">numpy &middot; scipy &middot; matplotlib &middot; pymultinest</span>
+            </div>
+            <div class="btn-row">
+                <a class="btn-colab"
+                   href="https://colab.research.google.com/github/jaydenn/CDMPP_computing/blob/main/CDM_statistics_inference.ipynb"
+                   target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="">
+                    Open in Google Colab
+                </a>
+                <span class="colab-note">Opens a fresh copy &mdash; use &ldquo;Copy to Drive&rdquo; to save your own version.</span>
+            </div>
+        </div>
+
+        <div class="tutorial-card">
+            <h3>Monte Carlo Methods</h3>
+            <p>
+                An introduction to Monte Carlo techniques in particle physics. Covers pseudo-random
+                number generation, sampling from arbitrary distributions, numerical integration,
+                and optimization — with examples drawn from dark matter and high-energy physics contexts.
+            </p>
+            <div class="tag-list">
+                <span class="tag">Monte Carlo</span>
+                <span class="tag">Simulation</span>
+                <span class="tag">Numerical methods</span>
+                <span class="tag">numpy &middot; scipy &middot; matplotlib</span>
+            </div>
+            <div class="btn-row">
+                <a class="btn-colab"
+                   href="https://colab.research.google.com/github/jaydenn/CDMPP_computing/blob/main/CDM_MonteCarlo_methods.ipynb"
+                   target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="">
+                    Open in Google Colab
+                </a>
+                <span class="colab-note">Opens a fresh copy &mdash; use &ldquo;Copy to Drive&rdquo; to save your own version.</span>
             </div>
         </div>
 
