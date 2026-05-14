@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Photo Title] — Jayden Newstead</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        a.back {
+            position: fixed;
+            top: 20px;
+            left: 24px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            transition: color 0.15s;
+            z-index: 10;
+        }
+
+        a.back:hover { color: #fff; }
+
+        .page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 72px 24px 80px;
+            min-height: 100vh;
+        }
+
+        .photo-wrap {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .photo-wrap img {
+            max-width: 100%;
+            max-height: 78vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .caption-block {
+            max-width: 900px;
+            width: 100%;
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid #222;
+        }
+
+        .photo-title {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.4rem;
+            font-weight: 400;
+            margin: 0 0 10px;
+            color: #f0f0f0;
+        }
+
+        .photo-caption {
+            font-size: 0.9rem;
+            line-height: 1.65;
+            color: #888;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<a class="back" href="../index.html#photography">← Back</a>
+
+<div class="page">
+    <div class="photo-wrap">
+        <img src="../[photo-filename].jpg" alt="[Photo Title]">
+    </div>
+    <div class="caption-block">
+        <h1 class="photo-title">[Photo Title]</h1>
+        <p class="photo-caption">[Caption text — location, date, any notes about the shot.]</p>
+    </div>
+</div>
+
+</body>
+</html>
