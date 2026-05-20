@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>arXiv triage — Jayden L. Newstead</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --accent: #1a5276;
+            --accent-light: #2e86c1;
+            --text: #222;
+            --muted: #555;
+            --border: #ddd;
+            --bg: #f8f8f6;
+            --card: #fff;
+            --high: #b03a2e;
+            --mid: #1a5276;
+            --low: #888;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .page {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        h1 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 1.9rem;
+            color: var(--accent);
+            margin: 0 0 6px;
+        }
+
+        .page-subtitle {
+            color: var(--muted);
+            font-size: 0.92rem;
+            margin: 0 0 8px;
+        }
+
+        .updated {
+            color: #999;
+            font-size: 0.82rem;
+            margin: 0 0 32px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin: 36px 0 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        h2 .archive-meta {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-left: 10px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        h3 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.86rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin: 22px 0 10px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3.highly-relevant { color: var(--high); border-bottom-color: var(--high); }
+        h3.relevant        { color: var(--mid); }
+        h3.not-relevant    { color: var(--low); }
+
+        .paper-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 8px;
+        }
+
+        .paper-list li {
+            padding: 9px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.92rem;
+            line-height: 1.55;
+        }
+
+        .paper-list li:last-child { border-bottom: none; }
+
+        .paper-list .arxiv-id {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-right: 8px;
+        }
+
+        .paper-list .paper-title {
+            font-family: 'Source Serif 4', serif;
+            font-style: italic;
+            color: var(--text);
+        }
+
+        .paper-list .paper-meta {
+            color: var(--muted);
+            font-size: 0.84rem;
+            margin-top: 2px;
+        }
+
+        .paper-list a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+
+        .paper-list a:hover { text-decoration: underline; }
+
+        .paper-list .note {
+            color: var(--muted);
+            font-size: 0.86rem;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        .empty {
+            color: #aaa;
+            font-size: 0.88rem;
+            font-style: italic;
+            margin: 4px 0 8px;
+        }
+
+        footer {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <h1>arXiv triage</h1>
+    <p class="page-subtitle">Daily triage of new papers from hep-ph, hep-th, and hep-ex.</p>
+    <p class="updated">Last updated: <!-- updated:start -->never<!-- updated:end --></p>
+
+    <section id="hep-ph">
+        <h2>hep-ph <span class="archive-meta">phenomenology</span></h2>
+
+        <h3 class="highly-relevant">Highly relevant</h3>
+        <!-- hep-ph:highly-relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-ph:highly-relevant:end -->
+
+        <h3 class="relevant">Relevant</h3>
+        <!-- hep-ph:relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-ph:relevant:end -->
+
+        <h3 class="not-relevant">Not relevant</h3>
+        <!-- hep-ph:not-relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-ph:not-relevant:end -->
+    </section>
+
+    <section id="hep-th">
+        <h2>hep-th <span class="archive-meta">theory</span></h2>
+
+        <h3 class="highly-relevant">Highly relevant</h3>
+        <!-- hep-th:highly-relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-th:highly-relevant:end -->
+
+        <h3 class="relevant">Relevant</h3>
+        <!-- hep-th:relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-th:relevant:end -->
+
+        <h3 class="not-relevant">Not relevant</h3>
+        <!-- hep-th:not-relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-th:not-relevant:end -->
+    </section>
+
+    <section id="hep-ex">
+        <h2>hep-ex <span class="archive-meta">experiment</span></h2>
+
+        <h3 class="highly-relevant">Highly relevant</h3>
+        <!-- hep-ex:highly-relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-ex:highly-relevant:end -->
+
+        <h3 class="relevant">Relevant</h3>
+        <!-- hep-ex:relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-ex:relevant:end -->
+
+        <h3 class="not-relevant">Not relevant</h3>
+        <!-- hep-ex:not-relevant:start -->
+        <p class="empty">No papers yet.</p>
+        <!-- hep-ex:not-relevant:end -->
+    </section>
+
+</div>
+
+<footer>
+    <!--
+    Routines updating this page should:
+      1. Replace the content between matching <!-- archive:bucket:start --> and <!-- archive:bucket:end --> markers.
+      2. Buckets: hep-ph, hep-th, hep-ex × highly-relevant, relevant, not-relevant.
+      3. Use this template for each paper entry:
+
+         <ul class="paper-list">
+           <li>
+             <span class="arxiv-id">2605.12345</span>
+             <span class="paper-title">Paper title here</span>
+             <div class="paper-meta">Authors et al. &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2605.12345">arXiv</a></div>
+             <div class="note">Optional one-line rationale.</div>
+           </li>
+         </ul>
+
+      4. Update the <!-- updated:start --> / <!-- updated:end --> stamp to today's date.
+    -->
+    <a href="/" style="color: inherit; text-decoration: none;">← Back to jaydenn.github.io</a>
+</footer>
+
+</body>
+</html>
