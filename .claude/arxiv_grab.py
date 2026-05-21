@@ -23,7 +23,7 @@ import arxiv  # pip install arxiv>=2.1
  
 def fetch_new_listings(category: str, max_results: int = 500) -> list[arxiv.Result]:
     """Return arxiv.Result objects submitted on the latest available date.
- 
+
     `max_results` is a safety cap; daily category volume is typically well below
     this. If a category routinely exceeds the cap, raise it or paginate.
     """
@@ -37,9 +37,25 @@ def fetch_new_listings(category: str, max_results: int = 500) -> list[arxiv.Resu
     results = list(client.results(search))
     if not results:
         return []
- 
+
     latest = results[0].published.date()  # most recent submission date in batch
     return [r for r in results if r.published.date() == latest]
+
+
+def fetch_new_listings_multi(categories: list[str], max_results: int = 500) -> list[arxiv.Result]:
+    """Fetch new listings across multiple categories, deduplicating by arxiv ID."""
+    seen: set[str] = set()
+    combined: list[arxiv.Result] = []
+    for cat in categories:
+        print(f"Fetching {cat}...")
+        papers = fetch_new_listings(cat, max_results)
+        print(f"  {len(papers)} new papers in {cat}")
+        for p in papers:
+            pid = p.get_short_id()
+            if pid not in seen:
+                seen.add(pid)
+                combined.append(p)
+    return combined
  
  
 def write_csv(papers: list[arxiv.Result], path: Path) -> None:
@@ -66,23 +82,27 @@ def write_csv(papers: list[arxiv.Result], path: Path) -> None:
             })
  
  
+DEFAULT_CATEGORIES = ["hep-th", "hep-ph", "hep-ex"]
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("category", nargs="?", default="hep-th",
-                    help="arXiv category, e.g. hep-th, astro-ph.CO, cond-mat.str-el, cs.LG")
-    ap.add_argument("--max", type=int, default=500, help="result cap (safety)")
+    ap.add_argument("category", nargs="*", default=DEFAULT_CATEGORIES,
+                    help="arXiv categories to fetch (default: hep-th hep-ph hep-ex)")
+    ap.add_argument("--max", type=int, default=500, help="result cap per category (safety)")
     ap.add_argument("--out", type=Path, default=None, help="output CSV path")
     args = ap.parse_args()
- 
-    papers = fetch_new_listings(args.category, args.max)
+
+    papers = fetch_new_listings_multi(args.category, args.max)
     if not papers:
-        print(f"No results for category {args.category!r}.")
+        print(f"No results for categories: {', '.join(args.category)}")
         return
- 
+
     latest = papers[0].published.date().isoformat()
-    out = args.out or Path(f"arxiv_{args.category.replace('.', '_')}_{latest}.csv")
+    cats_slug = "_".join(c.replace(".", "_") for c in args.category)
+    out = args.out or Path(f"arxiv_{cats_slug}_{latest}.csv")
     write_csv(papers, out)
-    print(f"Wrote {len(papers)} entries submitted on {latest} to {out}")
+    print(f"Wrote {len(papers)} unique entries submitted on {latest} to {out}")
  
  
 if __name__ == "__main__":
