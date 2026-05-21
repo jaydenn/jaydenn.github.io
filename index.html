@@ -223,6 +223,14 @@
 
         .pub-list a:hover { text-decoration: underline; }
 
+        /* ── Code repos ── */
+        .pub-list .repo-name {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.92rem;
+            font-style: normal;
+            color: var(--accent);
+        }
+
         /* ── Photography ── */
         .photo-list {
             list-style: none;
@@ -267,8 +275,10 @@
         <li><a href="#about">About</a></li>
         <li><a href="#research">Research</a></li>
         <li><a href="#publications">Publications</a></li>
+        <li><a href="#code">Code</a></li>
+        <li><a href="tutorials/">Tutorials</a></li>
         <li><a href="#photography">Photography</a></li>
-        <li><a href="#cv">CV</a></li>
+        <!-- <li><a href="#cv">CV</a></li> -->
     </ul>
 </nav>
 
@@ -371,6 +381,66 @@
         </ul>
     </section>
 
+    <section id="code">
+        <h2>Code</h2>
+        <p>Repositories accompanying specific publications. Full list on <a href="https://github.com/jaydenn">GitHub</a>.</p>
+        <ul class="pub-list">
+            <li>
+                <div class="pub-title"><a class="repo-name" href="https://github.com/jaydenn/DM_neutrino_in_solids">jaydenn/DM_neutrino_in_solids</a></div>
+                <div class="pub-meta">
+                    Nuclear and electron scattering by neutrinos and dark matter in condensed systems.
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2510.06574">arXiv:2510.06574</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title"><a class="repo-name" href="https://github.com/jaydenn/CEvNS_cross_sections">jaydenn/CEvNS_cross_sections</a></div>
+                <div class="pub-meta">
+                    Detailed nuclear-structure calculations for coherent elastic neutrino-nucleus scattering.
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2405.20060">arXiv:2405.20060</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title"><a class="repo-name" href="https://github.com/jaydenn/lowMassLDM">jaydenn/lowMassLDM</a></div>
+                <div class="pub-meta">
+                    Low-mass dark matter (in)direct detection via inelastic scattering.
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2208.08020">arXiv:2208.08020</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title"><a class="repo-name" href="https://github.com/jaydenn/nuMigdalCalc">jaydenn/nuMigdalCalc</a></div>
+                <div class="pub-meta">
+                    Migdal rates from neutrino and neutron nuclear recoils in liquid xenon and argon detectors.
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2112.08514">arXiv:2112.08514</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title"><a class="repo-name" href="https://github.com/jaydenn/CRiDM">jaydenn/CRiDM</a></div>
+                <div class="pub-meta">
+                    Cosmic-ray upscattered inelastic dark matter.
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2108.00583">arXiv:2108.00583</a>
+                </div>
+            </li>
+            <li>
+                <div class="pub-title"><a class="repo-name" href="https://github.com/jaydenn/inelasticMigdalXenon">jaydenn/inelasticMigdalXenon</a></div>
+                <div class="pub-meta">
+                    Low-mass inelastic dark matter direct detection via the Migdal effect.
+                    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2103.05890">arXiv:2103.05890</a>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <section id="tutorials">
+        <h2>Tutorials</h2>
+        <p>Interactive computational notebooks on dark matter physics, running in the browser with Google colab.</p>
+        <ul class="photo-list">
+            <li><a href="tutorials/">Dark Matter Freeze-out and Relic Density</a></li>
+            <li><a href="tutorials/">Frequentist and Bayesian Inference</a></li>
+            <li><a href="tutorials/">Monte Carlo Methods</a></li>
+            <li><a href="tutorials/">The 2nd Law of Thermodynamics — Teaching Demo</a></li>
+        </ul>
+    </section>
+
     <section id="photography">
         <h2>Photography</h2>
         <ul class="photo-list">
@@ -380,10 +450,13 @@
         </ul>
     </section>
 
+    <!--
     <section id="cv">
         <h2>Curriculum Vitae</h2>
         <p><a href="cv.pdf">Download CV (PDF)</a></p>
     </section>
+    -->
+
 
 </div>
 

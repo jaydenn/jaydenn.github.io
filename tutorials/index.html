@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorials — Jayden L. Newstead</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --accent: #1a5276;
+            --accent-light: #2e86c1;
+            --text: #222;
+            --muted: #555;
+            --border: #ddd;
+            --bg: #f8f8f6;
+            --card: #fff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 15.5px;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        nav ul {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            list-style: none;
+            display: flex;
+            gap: 0;
+        }
+
+        nav a {
+            display: block;
+            padding: 14px 16px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
+
+        nav a:hover { color: var(--accent); }
+        nav a.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+        .page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        h1 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 1.8rem;
+            color: var(--accent);
+            margin: 0 0 8px;
+        }
+
+        .page-subtitle {
+            color: var(--muted);
+            margin: 0 0 36px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--accent);
+            margin: 0 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tutorial-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .tutorial-card h3 {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 8px;
+            color: var(--text);
+        }
+
+        .tutorial-card p {
+            color: var(--muted);
+            font-size: 0.93rem;
+            margin: 0 0 16px;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .tag {
+            background: #eef2f7;
+            border: 1px solid #d5e2ee;
+            border-radius: 3px;
+            padding: 2px 9px;
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-colab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: #f9ab00;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .btn-colab:hover { background: #e09b00; }
+
+        .btn-colab img { height: 18px; }
+
+        .colab-note {
+            font-size: 0.82rem;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        footer {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <ul>
+        <li><a href="/">About</a></li>
+        <li><a href="/#research">Research</a></li>
+        <li><a href="/#publications">Publications</a></li>
+        <li><a href="/#photography">Photography</a></li>
+        <li><a href="/tutorials/" class="active">Tutorials</a></li>
+        <li><a href="/#cv">CV</a></li>
+    </ul>
+</nav>
+
+<div class="page">
+
+    <h1>Tutorials</h1>
+    <p class="page-subtitle">Interactive computational notebooks on dark matter and particle physics.</p>
+
+    <section>
+        <h2>Dark Matter</h2>
+
+        <div class="tutorial-card">
+            <h3>Dark Matter Freeze-out and Relic Density</h3>
+            <p>
+                Compute the relic density of dark matter by numerically solving the Boltzmann equation.
+                Covers the freeze-out mechanism, thermally-averaged annihilation cross sections, and how
+                weak-scale interactions give rise to the observed dark matter abundance
+                (&Omega;<sub>&chi;</sub>h&sup2;&nbsp;&asymp;&nbsp;0.12).
+                Includes exercises on the improved yield-based Boltzmann equation, relic density
+                as a function of WIMP mass, and freeze-in as an alternative production mechanism.
+            </p>
+            <div class="tag-list">
+                <span class="tag">Dark matter</span>
+                <span class="tag">Boltzmann equation</span>
+                <span class="tag">Cosmology</span>
+                <span class="tag">numpy &middot; scipy &middot; matplotlib</span>
+            </div>
+            <div class="btn-row">
+                <a class="btn-colab"
+                   href="https://colab.research.google.com/github/jaydenn/jaydenn.github.io/blob/main/tutorials/notebooks/CDM_intro_freezeout.ipynb"
+                   target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="">
+                    Open in Google Colab
+                </a>
+                <span class="colab-note">Opens a fresh copy &mdash; use &ldquo;Copy to Drive&rdquo; to save your own version.</span>
+            </div>
+        </div>
+
+        <div class="tutorial-card">
+            <h3>Frequentist and Bayesian Inference</h3>
+            <p>
+                Statistical methods for dark matter direct detection, using a simplified XENON1T-like
+                experiment as a worked example. Covers hypothesis testing, discovery and upper-limit
+                setting via frequentist test statistics, and Bayesian nested sampling with PyMultiNest.
+            </p>
+            <div class="tag-list">
+                <span class="tag">Statistics</span>
+                <span class="tag">Bayesian inference</span>
+                <span class="tag">Direct detection</span>
+                <span class="tag">numpy &middot; scipy &middot; matplotlib &middot; pymultinest</span>
+            </div>
+            <div class="btn-row">
+                <a class="btn-colab"
+                   href="https://colab.research.google.com/github/jaydenn/CDMPP_computing/blob/main/CDM_statistics_inference.ipynb"
+                   target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="">
+                    Open in Google Colab
+                </a>
+                <span class="colab-note">Opens a fresh copy &mdash; use &ldquo;Copy to Drive&rdquo; to save your own version.</span>
+            </div>
+        </div>
+
+        <div class="tutorial-card">
+            <h3>Monte Carlo Methods</h3>
+            <p>
+                An introduction to Monte Carlo techniques in particle physics. Covers pseudo-random
+                number generation, sampling from arbitrary distributions, numerical integration,
+                and optimization — with examples drawn from dark matter and high-energy physics contexts.
+            </p>
+            <div class="tag-list">
+                <span class="tag">Monte Carlo</span>
+                <span class="tag">Simulation</span>
+                <span class="tag">Numerical methods</span>
+                <span class="tag">numpy &middot; scipy &middot; matplotlib</span>
+            </div>
+            <div class="btn-row">
+                <a class="btn-colab"
+                   href="https://colab.research.google.com/github/jaydenn/CDMPP_computing/blob/main/CDM_MonteCarlo_methods.ipynb"
+                   target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="">
+                    Open in Google Colab
+                </a>
+                <span class="colab-note">Opens a fresh copy &mdash; use &ldquo;Copy to Drive&rdquo; to save your own version.</span>
+            </div>
+        </div>
+
+    </section>
+
+    <section>
+        <h2>Statistical Mechanics</h2>
+
+        <div class="tutorial-card">
+            <h3>The 2nd Law of Thermodynamics — Teaching Demo</h3>
+            <p>
+                A microscopic-to-macroscopic walkthrough of the second law. Simulates energy diffusion
+                on a 2D lattice via a random-walk rule, then watches a hot region relax to equilibrium
+                with a cold region. Closes by counting microstates of an Einstein solid &mdash; the
+                Boltzmann entropy peak sits exactly where the simulation lands. Same answer, two
+                derivations.
+            </p>
+            <div class="tag-list">
+                <span class="tag">Thermodynamics</span>
+                <span class="tag">Entropy</span>
+                <span class="tag">Random walk</span>
+                <span class="tag">numpy &middot; matplotlib</span>
+            </div>
+            <div class="btn-row">
+                <a class="btn-colab"
+                   href="https://colab.research.google.com/github/jaydenn/jaydenn.github.io/blob/main/tutorials/notebooks/2nd_law_demo.ipynb"
+                   target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="">
+                    Open in Google Colab
+                </a>
+                <span class="colab-note">Opens a fresh copy &mdash; use &ldquo;Copy to Drive&rdquo; to save your own version.</span>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+<footer>
+    <a href="/" style="color: inherit; text-decoration: none;">← Back to jaydenn.github.io</a>
+</footer>
+
+</body>
+</html>
