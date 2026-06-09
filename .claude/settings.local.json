@@ -4,7 +4,10 @@
       "Bash(pip --version)",
       "Bash(pip3 --version)",
       "PowerShell(python --version)",
-      "PowerShell(pip --version)"
+      "PowerShell(pip --version)",
+      "Bash(python arxiv_grab.py)",
+      "Bash(python3 arxiv_grab.py)",
+      "Bash(pip3 install *)"
     ]
   }
 }
