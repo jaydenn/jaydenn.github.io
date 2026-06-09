@@ -61,6 +61,37 @@
 
         nav a:hover { color: var(--accent); }
 
+        /* ── View toggle (Technical / Public) ── */
+        .view-toggle {
+            display: inline-flex;
+            background: #eef2f7;
+            border: 1px solid #d5e2ee;
+            border-radius: 999px;
+            padding: 3px;
+            margin-left: auto;
+            align-self: center;
+        }
+
+        .view-toggle a {
+            display: block;
+            padding: 5px 16px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .view-toggle a.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .view-toggle a:not(.active):hover { color: var(--accent); }
+
         .page {
             max-width: 800px;
             margin: 0 auto;
@@ -277,8 +308,11 @@
         <li><a href="#publications">Publications</a></li>
         <li><a href="#code">Code</a></li>
         <li><a href="tutorials/">Tutorials</a></li>
-        <li><a href="#photography">Photography</a></li>
         <!-- <li><a href="#cv">CV</a></li> -->
+        <div class="view-toggle">
+            <a href="index.html" class="active">Technical</a>
+            <a href="public.html">Public</a>
+        </div>
     </ul>
 </nav>
 
@@ -438,15 +472,6 @@
             <li><a href="tutorials/">Frequentist and Bayesian Inference</a></li>
             <li><a href="tutorials/">Monte Carlo Methods</a></li>
             <li><a href="tutorials/">The 2nd Law of Thermodynamics — Teaching Demo</a></li>
-        </ul>
-    </section>
-
-    <section id="photography">
-        <h2>Photography</h2>
-        <ul class="photo-list">
-            <li><a href="photos/photo1.html">Four Peaks</a></li>
-            <li><a href="photos/photo2.html">Milky Way over Cape Schanck</a></li>
-            <li><a href="photos/photo3.html">Monument Valley</a></li>
         </ul>
     </section>
 

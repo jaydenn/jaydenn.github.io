@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jayden L. Newstead — Dark Matter for Everyone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --accent: #1a5276;
+            --accent-light: #2e86c1;
+            --text: #222;
+            --muted: #555;
+            --border: #ddd;
+            --bg: #f8f8f6;
+            --card: #fff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 15.5px;
+            line-height: 1.65;
+            color: var(--text);
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        nav ul {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            list-style: none;
+            display: flex;
+            gap: 0;
+        }
+
+        nav a {
+            display: block;
+            padding: 14px 16px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
+
+        nav a:hover { color: var(--accent); }
+
+        /* ── View toggle (Technical / Public) ── */
+        .view-toggle {
+            display: inline-flex;
+            background: #eef2f7;
+            border: 1px solid #d5e2ee;
+            border-radius: 999px;
+            padding: 3px;
+            margin-left: auto;
+            align-self: center;
+        }
+
+        .view-toggle a {
+            display: block;
+            padding: 5px 16px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .view-toggle a.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .view-toggle a:not(.active):hover { color: var(--accent); }
+
+        .page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        /* ── Profile header ── */
+        .profile {
+            display: flex;
+            gap: 36px;
+            align-items: stretch;
+            margin-bottom: 48px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .profile-photo {
+            width: 200px;
+            flex-shrink: 0;
+            border-radius: 4px;
+            background: #e4e4e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.4;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .profile-info h1 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 2rem;
+            margin: 0 0 4px;
+            color: var(--accent);
+        }
+
+        .profile-info .title {
+            font-size: 1rem;
+            color: var(--muted);
+            margin: 0 0 16px;
+        }
+
+        .profile-meta {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.9;
+        }
+
+        .profile-meta a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+
+        .profile-meta a:hover { text-decoration: underline; }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .links a {
+            display: inline-block;
+            padding: 5px 13px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-size: 0.82rem;
+            color: var(--muted);
+            text-decoration: none;
+            background: var(--card);
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .links a:hover {
+            border-color: var(--accent-light);
+            color: var(--accent);
+        }
+
+        /* ── Sections ── */
+        section { margin-bottom: 44px; }
+
+        h2 {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--accent);
+            margin: 0 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        p { margin: 0 0 12px; }
+
+        .lead {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.12rem;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        /* ── Media lists (podcasts / articles) ── */
+        .media-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .media-list li {
+            padding: 14px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .media-list li:last-child { border-bottom: none; }
+
+        .media-list .media-title {
+            font-family: 'Source Serif 4', serif;
+            font-style: italic;
+            font-size: 1rem;
+        }
+
+        .media-list .media-title a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .media-list .media-title a:hover { text-decoration: underline; }
+
+        .media-list .media-meta {
+            color: var(--muted);
+            font-size: 0.86rem;
+            margin-top: 3px;
+        }
+
+        /* ── Photography ── */
+        .photo-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .photo-list li {
+            padding: 9px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.92rem;
+        }
+
+        .photo-list li:last-child { border-bottom: none; }
+
+        .photo-list a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+
+        .photo-list a:hover { text-decoration: underline; }
+
+        footer {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        @media (max-width: 560px) {
+            .profile { flex-direction: column; gap: 20px; }
+            .profile-photo { width: 100%; height: 220px; }
+            .profile-info h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#darkmatter">Dark Matter</a></li>
+        <li><a href="#podcasts">Podcasts &amp; Media</a></li>
+        <li><a href="#articles">Articles</a></li>
+        <li><a href="#photography">Photography</a></li>
+        <div class="view-toggle">
+            <a href="index.html">Technical</a>
+            <a href="public.html" class="active">Public</a>
+        </div>
+    </ul>
+</nav>
+
+<div class="page">
+
+    <div class="profile">
+        <div class="profile-photo">
+            <img src="photo.JPG" alt="Jayden Newstead">
+        </div>
+        <div class="profile-info">
+            <h1>Jayden L. Newstead</h1>
+            <p class="title">Physicist &mdash; University of Melbourne</p>
+            <div class="profile-meta">
+                I hunt for dark matter: the invisible stuff that makes up<br>
+                most of the matter in the universe.<br><br>
+            </div>
+            <div class="links">
+                <a href="mailto:jayden.newstead@unimelb.edu.au">Email</a>
+                <a href="https://github.com/jaydenn">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <section id="about">
+        <h2>Hello</h2>
+        <p class="lead">
+            I&rsquo;m a physicist at the University of Melbourne, and my job is to figure out what
+            the universe is made of. Specifically, I work on <strong>dark matter</strong> &mdash;
+            the mysterious, invisible substance that outweighs everything we can see by five to one.
+        </p>
+        
+    </section>
+
+    <section id="darkmatter">
+        <h2>What is dark matter?</h2>
+        <p>
+            When astronomers measure how fast galaxies spin, they spin <em>far</em> too quickly.
+            The stars and gas we can see don&rsquo;t have nearly enough gravity to hold them together &mdash;
+            they should fly apart. And yet they don&rsquo;t. Something invisible is providing the extra
+            pull.
+        </p>
+        <p>
+            We call that something <strong>dark matter</strong>. It doesn&rsquo;t give off light, it
+            doesn&rsquo;t absorb light, and it passes straight through ordinary matter &mdash; including
+            you &mdash; almost without a trace. But its gravity shapes entire galaxies, bends the path of
+            starlight, and left fingerprints on the afterglow of the Big Bang. Add it all up and dark
+            matter makes up about <strong>85% of all the matter in the universe</strong>. The stuff that
+            makes up stars, planets, and people is the rare exception.
+        </p>
+        <p>
+            The catch: after decades of looking, we still don&rsquo;t know what dark matter <em>is</em>.
+            My research tries to answer that by predicting the faint signals dark matter would leave if
+            it occasionally bumped into an ordinary atom &mdash; and by helping design the ultra-sensitive
+            detectors, shielded deep underground, that are waiting to spot that bump. The same techniques
+            also let us study <strong>neutrinos</strong>, the ghostly particles streaming out of the Sun
+            and exploding stars.
+        </p>
+    </section>
+
+    <section id="podcasts">
+        <h2>Podcasts &amp; Media</h2>
+        <p>Conversations I&rsquo;ve had about dark matter, the universe, and life as a physicist.</p>
+        <ul class="media-list">
+            <!-- TEMPLATE — duplicate a <li> block for each podcast appearance:
+            <li>
+                <div class="media-title"><a href="EPISODE_URL">Episode or show title</a></div>
+                <div class="media-meta">Podcast name &nbsp;·&nbsp; Month Year</div>
+            </li>
+            -->
+            <li>
+                <div class="media-title"><a href="https://physicsworld.com/a/room-temperature-superconductor-arrives-at-last-a-dark-matter-detector-mystery/">Room-temperature superconductor arrives at last, a dark-matter detector mystery</a></div>
+                <div class="media-meta">Physics World Weekly podcast</div>
+            </li>
+            <li>
+                <div class="media-title"><a href="https://www.rrr.org.au/explore/podcasts/einstein-a-go-go/episodes/6507-dark-matter-green-wellbeing-and-stress-on-the-brain">Dark matter, green wellbeing and stress on the brain</a></div>
+                <div class="media-meta">Einstein A Go-Go &nbsp;·&nbsp; Triple R (RRR)</div>
+            </li>
+            <li>
+                <div class="media-title"><a href="https://www.rrr.org.au/explore/programs/einstein-a-go-go/episodes/28351-einstein-a-go-go-25-february-2024">Einstein A Go-Go &mdash; 25 February 2024</a></div>
+                <div class="media-meta">Einstein A Go-Go &nbsp;·&nbsp; Triple R (RRR)</div>
+            </li>
+            <li>
+                <div class="media-title"><a href="https://youtu.be/5-2X2Zu2EQc">Highlighted Alumni feature</a></div>
+                <div class="media-meta">Beaconhills College &nbsp;·&nbsp; YouTube</div>
+            </li>
+        </ul>
+    </section>
+
+    <section id="articles">
+        <h2>Popular science writing</h2>
+        <p>Articles I&rsquo;ve written for a general audience.</p>
+        <ul class="media-list">
+            <!-- TEMPLATE — duplicate a <li> block for each article:
+            <li>
+                <div class="media-title"><a href="ARTICLE_URL">Article title</a></div>
+                <div class="media-meta">Publication name &nbsp;·&nbsp; Month Year</div>
+            </li>
+            -->
+            <li>
+                <div class="media-title"><a href="https://pursuit.unimelb.edu.au/articles/neutrinos-are-the-suns-secret-messengers">Neutrinos are the Sun&rsquo;s secret messengers</a></div>
+                <div class="media-meta">Pursuit &nbsp;·&nbsp; University of Melbourne</div>
+            </li>
+            <li>
+                <div class="media-title"><a href="https://pursuit.unimelb.edu.au/articles/dark-matter-might-be-light">Dark matter might be light</a></div>
+                <div class="media-meta">Pursuit &nbsp;·&nbsp; University of Melbourne</div>
+            </li>
+        </ul>
+    </section>
+
+    <section id="photography">
+        <h2>Photography</h2>
+        <ul class="photo-list">
+            <li><a href="photos/photo1.html">Four Peaks</a></li>
+            <li><a href="photos/photo2.html">Milky Way over Cape Schanck</a></li>
+            <li><a href="photos/photo3.html">Monument Valley</a></li>
+        </ul>
+    </section>
+
+</div>
+
+<footer>
+    Last updated June 2026.
+</footer>
+
+</body>
+</html>
