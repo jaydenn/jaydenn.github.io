@@ -135,13 +135,13 @@ def write_csv(papers: list[arxiv.Result], path: Path, keywords: dict[int, list[s
             })
  
  
-DEFAULT_CATEGORIES = ["hep-th", "hep-ph", "hep-ex"]
+DEFAULT_CATEGORIES = ["hep-th", "hep-ph", "hep-ex", "astro-ph", "nucl-th"]
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("category", nargs="*", default=DEFAULT_CATEGORIES,
-                    help="arXiv categories to fetch (default: hep-th hep-ph hep-ex)")
+                    help="arXiv categories to fetch (default: hep-th hep-ph hep-ex astro-ph nucl-th)")
     ap.add_argument("--max", type=int, default=500, help="result cap per category (safety)")
     ap.add_argument("--out", type=Path, default=None, help="output CSV path")
     ap.add_argument("--keywords", type=Path, default=DEFAULT_KEYWORDS_PATH,
