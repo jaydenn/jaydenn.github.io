@@ -191,8 +191,8 @@ function buildChart(day, forecastMax, currentTemp) {
     const bandTop = 112, bandH = 58, bandBot = bandTop + bandH;
     const recBlue = "var(--accent-light)", recOrange = "var(--forecast)";
 
-    // record values bracket the axis on both ends
-    const recs = [day.rec_high_max, day.rec_low_max, day.rec_high_min, day.rec_low_min];
+    // record values bracket the axis on both ends (ignore any missing fields)
+    const recs = [day.rec_high_max, day.rec_low_max, day.rec_high_min, day.rec_low_min].filter(Number.isFinite);
     const lo = Math.min(day.p2_5, currentTemp, forecastMax, ...recs);
     const hi = Math.max(day.p97_5, currentTemp, forecastMax, ...recs);
     const pad = Math.max(1.0, (hi - lo) * 0.06);
@@ -245,10 +245,10 @@ function buildChart(day, forecastMax, currentTemp) {
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecast max temperature versus historical distribution and records">
         <rect x="${xOuter0}" y="${bandTop}" width="${xOuter1 - xOuter0}" height="${bandH}" fill="var(--band-outer)" rx="3"/>
         <rect x="${xInner0}" y="${bandTop}" width="${xInner1 - xInner0}" height="${bandH}" fill="var(--band-inner)" rx="3"/>
-        ${recLine(day.rec_high_max, recOrange)}
-        ${recLine(day.rec_high_min, recOrange)}
-        ${recLine(day.rec_low_max, recBlue)}
-        ${recLine(day.rec_low_min, recBlue)}
+        ${Number.isFinite(day.rec_high_max) ? recLine(day.rec_high_max, recOrange) : ""}
+        ${Number.isFinite(day.rec_high_min) ? recLine(day.rec_high_min, recOrange) : ""}
+        ${Number.isFinite(day.rec_low_max) ? recLine(day.rec_low_max, recBlue) : ""}
+        ${Number.isFinite(day.rec_low_min) ? recLine(day.rec_low_min, recBlue) : ""}
         <line x1="${xMed}" y1="${bandTop - 4}" x2="${xMed}" y2="${bandBot + 4}" stroke="var(--median)" stroke-width="2.5"/>
         <text x="${xMed}" y="${bandTop - 9}" text-anchor="middle" font-size="11" fill="var(--median)">median ${fmt(day.p50)}&deg;</text>
         <line x1="${ml}" y1="${bandBot + 6}" x2="${W - mr}" y2="${bandBot + 6}" stroke="#ddd"/>
@@ -281,7 +281,7 @@ async function main() {
     try {
         const [fxRes, climRes] = await Promise.all([
             fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Australia%2FMelbourne&forecast_days=1`),
-            fetch("climatology.json")
+            fetch("climatology.json?v=2", { cache: "no-cache" })
         ]);
         if (!fxRes.ok) throw new Error("Weather API returned " + fxRes.status);
         if (!climRes.ok) throw new Error("Could not load climatology.json");
@@ -303,7 +303,10 @@ async function main() {
         const desc = verdictText(sigma);
 
         const niceDate = d.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-        const recDate = iso => new Date(iso + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+        const recDate = iso => {
+            const rd = new Date((iso || "") + "T00:00:00");
+            return isNaN(rd) ? "&mdash;" : rd.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+        };
 
         content.innerHTML = `
             <div class="now">

@@ -6,7 +6,14 @@
       "Bash(python weather/_build_climatology.py)",
       "Bash(python -)",
       "Bash(python weather/build_climatology.py)",
-      "Bash(python -c \"import json; d=[x for x in json.load\\(open\\('weather/climatology.json',encoding='utf-8'\\)\\)['days'] if x['month']==6 and x['day']==12][0]; print\\(json.dumps\\(d, indent=2\\)\\)\")"
+      "Bash(python -c \"import json; d=[x for x in json.load\\(open\\('weather/climatology.json',encoding='utf-8'\\)\\)['days'] if x['month']==6 and x['day']==12][0]; print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Read(//c/Program Files/Google/Chrome/Application/**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
+      "Bash(python -m http.server 8765)",
+      "Bash(curl -s \"http://localhost:8765/climatology.json?v=2\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); j=[x for x in d['days'] if x['month']==6 and x['day']==12][0]; print\\('served has records:', 'rec_high_max' in j, j.get\\('rec_high_max'\\), j.get\\('rec_high_max_date'\\)\\)\")",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"http.server 8765\")"
     ]
   }
 }
