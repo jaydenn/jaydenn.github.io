@@ -111,6 +111,18 @@
 
     .card .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 12px; }
 
+    /* ── Side-by-side vertical charts ── */
+    .charts { display: flex; gap: 20px; flex-wrap: wrap; }
+    .chart { flex: 1 1 240px; min-width: 240px; }
+    .chart h3 {
+        font-family: 'Source Serif 4', serif;
+        font-weight: 600;
+        font-size: 0.98rem;
+        color: var(--accent);
+        text-align: center;
+        margin: 0 0 6px;
+    }
+
     svg { width: 100%; height: auto; display: block; }
 
     .legend {
@@ -184,87 +196,108 @@ function rankFromPercentiles(t, day) {
     return 50;
 }
 
-function buildChart(day, forecastMax, currentTemp) {
-    // ── geometry ──
-    const W = 800, H = 250;
-    const ml = 30, mr = 30, plotW = W - ml - mr;
-    const bandTop = 112, bandH = 58, bandBot = bandTop + bandH;
-    const recBlue = "var(--accent-light)", recOrange = "var(--forecast)";
+// Generic vertical distribution chart.
+// opts: { dMin, dMax, step, unit, bands:[{from,to,fill}], lines:[{value,color,label,dashed,big}], ariaLabel }
+function vChart(opts) {
+    const W = 300, H = 430;
+    const axisX = 42, bandX0 = 60, bandX1 = 106, labelX = bandX1 + 6;
+    const yTop = 30, yBot = 396;
+    const y = v => yBot - (v - opts.dMin) / (opts.dMax - opts.dMin) * (yBot - yTop);
 
-    // record values bracket the axis on both ends (ignore any missing fields)
+    // axis + ticks
+    let ticks = `<line x1="${axisX}" y1="${yTop - 8}" x2="${axisX}" y2="${yBot + 6}" stroke="#ddd"/>`;
+    ticks += `<text x="${axisX - 6}" y="${yTop - 12}" text-anchor="end" font-size="10" fill="#aaa">${opts.unit}</text>`;
+    for (let t = Math.ceil(opts.dMin / opts.step) * opts.step; t <= opts.dMax + 1e-6; t += opts.step) {
+        const yy = y(t).toFixed(1);
+        ticks += `<line x1="${axisX - 4}" y1="${yy}" x2="${axisX}" y2="${yy}" stroke="#bbb"/>`;
+        ticks += `<text x="${axisX - 7}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#888">${+t.toFixed(2)}</text>`;
+    }
+
+    // bands (vertical rectangles)
+    let bands = "";
+    for (const b of opts.bands) {
+        const yt = y(b.to), yb = y(b.from);
+        bands += `<rect x="${bandX0}" y="${yt.toFixed(1)}" width="${bandX1 - bandX0}" height="${Math.max(0, yb - yt).toFixed(1)}" fill="${b.fill}" rx="3"/>`;
+    }
+
+    // reference lines (median / markers / records)
+    const lines = opts.lines.filter(l => Number.isFinite(l.value));
+    let lineSvg = "";
+    for (const l of lines) {
+        const yy = y(l.value);
+        const dash = l.dashed ? ` stroke-dasharray="5 4" opacity="0.85"` : "";
+        const wgt = l.big ? 2.5 : (l.dashed ? 1.5 : 2);
+        lineSvg += `<line x1="${axisX}" y1="${yy.toFixed(1)}" x2="${bandX1 + 4}" y2="${yy.toFixed(1)}" stroke="${l.color}" stroke-width="${wgt}"${dash}/>`;
+        if (l.big) {
+            const xx = bandX1 + 4;
+            lineSvg += `<polygon points="${xx},${yy.toFixed(1)} ${xx - 7},${(yy - 4.5).toFixed(1)} ${xx - 7},${(yy + 4.5).toFixed(1)}" fill="${l.color}"/>`;
+        }
+    }
+
+    // labels on the right, nudged downward to avoid overlap
+    const GAP = 13;
+    const sorted = lines.map(l => ({ ...l, yIdeal: y(l.value) })).sort((a, b) => a.yIdeal - b.yIdeal);
+    let prev = -Infinity;
+    for (const s of sorted) { s.yLab = Math.max(s.yIdeal, prev + GAP); prev = s.yLab; }
+    let labelSvg = "";
+    for (const s of sorted) {
+        labelSvg += `<line x1="${bandX1 + 4}" y1="${s.yIdeal.toFixed(1)}" x2="${labelX}" y2="${s.yLab.toFixed(1)}" stroke="${s.color}" stroke-width="0.7" opacity="0.5"/>`;
+        labelSvg += `<text x="${labelX + 3}" y="${(s.yLab + 3.5).toFixed(1)}" font-size="${s.big ? 11.5 : 10.5}" font-weight="${s.big ? 600 : 400}" fill="${s.color}">${s.label}</text>`;
+    }
+
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.ariaLabel}">
+        ${bands}${ticks}${lineSvg}${labelSvg}
+    </svg>`;
+}
+
+function tempChart(day, forecastMax, currentTemp) {
+    const orange = "var(--forecast)", blue = "var(--accent-light)";
     const recs = [day.rec_high_max, day.rec_low_max, day.rec_high_min, day.rec_low_min].filter(Number.isFinite);
     const lo = Math.min(day.p2_5, currentTemp, forecastMax, ...recs);
     const hi = Math.max(day.p97_5, currentTemp, forecastMax, ...recs);
-    const pad = Math.max(1.0, (hi - lo) * 0.06);
-    const tMin = Math.floor(lo - pad);
-    const tMax = Math.ceil(hi + pad);
-    const x = t => ml + (t - tMin) / (tMax - tMin) * plotW;
+    const pad = Math.max(1.0, (hi - lo) * 0.05);
+    const dMin = Math.floor(lo - pad), dMax = Math.ceil(hi + pad);
+    const range = dMax - dMin;
+    return vChart({
+        dMin, dMax, unit: "°C",
+        step: range <= 15 ? 2 : (range <= 30 ? 5 : 10),
+        ariaLabel: "Forecast max temperature versus historical distribution and records",
+        bands: [
+            { from: day.p2_5, to: day.p97_5, fill: "var(--band-outer)" },
+            { from: day.p16, to: day.p84, fill: "var(--band-inner)" },
+        ],
+        lines: [
+            { value: day.p50, color: "var(--median)", label: "median " + fmt(day.p50) + "&deg;" },
+            { value: forecastMax, color: orange, big: true, label: "Forecast " + fmt(forecastMax) + "&deg;" },
+            { value: currentTemp, color: "var(--current)", big: true, label: "Now " + fmt(currentTemp) + "&deg;" },
+            { value: day.rec_high_max, color: orange, dashed: true, label: "Highest max " + fmt(day.rec_high_max) + "&deg;" },
+            { value: day.rec_high_min, color: orange, dashed: true, label: "Highest min " + fmt(day.rec_high_min) + "&deg;" },
+            { value: day.rec_low_max, color: blue, dashed: true, label: "Lowest max " + fmt(day.rec_low_max) + "&deg;" },
+            { value: day.rec_low_min, color: blue, dashed: true, label: "Lowest min " + fmt(day.rec_low_min) + "&deg;" },
+        ],
+    });
+}
 
-    // ── axis ticks ──
-    const span = tMax - tMin;
-    const step = span <= 12 ? 2 : (span <= 25 ? 5 : 10);
-    let ticks = "";
-    for (let t = Math.ceil(tMin / step) * step; t <= tMax; t += step) {
-        const xx = x(t).toFixed(1);
-        ticks += `<line x1="${xx}" y1="${bandBot + 6}" x2="${xx}" y2="${bandBot + 11}" stroke="#bbb"/>`;
-        ticks += `<text x="${xx}" y="${bandBot + 26}" text-anchor="middle" font-size="12" fill="#888">${t}&deg;</text>`;
-    }
-
-    // ── bands ──
-    const xOuter0 = x(day.p2_5), xOuter1 = x(day.p97_5);
-    const xInner0 = x(day.p16), xInner1 = x(day.p84);
-    const xMed = x(day.p50);
-
-    // ── record line helper (dashed, value label at top) ──
-    function recLine(t, color) {
-        const xx = x(t);
-        const anchor = xx < ml + 18 ? "start" : (xx > W - mr - 18 ? "end" : "middle");
-        return `
-            <line x1="${xx}" y1="30" x2="${xx}" y2="${bandBot + 6}" stroke="${color}" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.85"/>
-            <text x="${xx}" y="22" text-anchor="${anchor}" font-size="10" fill="${color}">${fmt(t)}&deg;</text>`;
-    }
-
-    // ── marker helper (solid, triangle + labels) ──
-    function marker(t, color, label, sub, up) {
-        const xx = x(t);
-        const yTop = up ? bandTop - 30 : bandBot + 40;
-        const yLine0 = up ? bandTop - 8 : bandBot + 8;
-        const yLine1 = up ? bandBot : bandTop;
-        const tri = up
-            ? `${xx},${bandTop - 6} ${xx - 5},${bandTop - 13} ${xx + 5},${bandTop - 13}`
-            : `${xx},${bandBot + 6} ${xx - 5},${bandBot + 13} ${xx + 5},${bandBot + 13}`;
-        const anchor = xx < ml + 40 ? "start" : (xx > W - mr - 40 ? "end" : "middle");
-        return `
-            <line x1="${xx}" y1="${yLine0}" x2="${xx}" y2="${yLine1}" stroke="${color}" stroke-width="2.5"/>
-            <polygon points="${tri}" fill="${color}"/>
-            <text x="${xx}" y="${yTop}" text-anchor="${anchor}" font-size="13" font-weight="600" fill="${color}">${label}</text>
-            <text x="${xx}" y="${yTop + 15}" text-anchor="${anchor}" font-size="11" fill="${color}" opacity="0.85">${sub}</text>`;
-    }
-
-    return `
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecast max temperature versus historical distribution and records">
-        <rect x="${xOuter0}" y="${bandTop}" width="${xOuter1 - xOuter0}" height="${bandH}" fill="var(--band-outer)" rx="3"/>
-        <rect x="${xInner0}" y="${bandTop}" width="${xInner1 - xInner0}" height="${bandH}" fill="var(--band-inner)" rx="3"/>
-        ${Number.isFinite(day.rec_high_max) ? recLine(day.rec_high_max, recOrange) : ""}
-        ${Number.isFinite(day.rec_high_min) ? recLine(day.rec_high_min, recOrange) : ""}
-        ${Number.isFinite(day.rec_low_max) ? recLine(day.rec_low_max, recBlue) : ""}
-        ${Number.isFinite(day.rec_low_min) ? recLine(day.rec_low_min, recBlue) : ""}
-        <line x1="${xMed}" y1="${bandTop - 4}" x2="${xMed}" y2="${bandBot + 4}" stroke="var(--median)" stroke-width="2.5"/>
-        <text x="${xMed}" y="${bandTop - 9}" text-anchor="middle" font-size="11" fill="var(--median)">median ${fmt(day.p50)}&deg;</text>
-        <line x1="${ml}" y1="${bandBot + 6}" x2="${W - mr}" y2="${bandBot + 6}" stroke="#ddd"/>
-        ${ticks}
-        ${marker(forecastMax, "var(--forecast)", "Forecast max " + fmt(forecastMax) + "&deg;", "today", true)}
-        ${marker(currentTemp, "var(--current)", "Now " + fmt(currentTemp) + "&deg;", "current", false)}
-    </svg>
-    <div class="legend">
-        <span><i class="swatch" style="background:var(--band-outer)"></i> 95% range (2.5&ndash;97.5%)</span>
-        <span><i class="swatch" style="background:var(--band-inner)"></i> 68% range (16&ndash;84%, &plusmn;1&sigma;)</span>
-        <span><i class="swatch line" style="border-color:var(--median)"></i> median</span>
-        <span><i class="swatch line" style="border-color:var(--forecast)"></i> forecast max</span>
-        <span><i class="swatch line" style="border-color:var(--current)"></i> current</span>
-        <span><i class="swatch line" style="border-color:var(--forecast);border-top-style:dashed"></i> record highs (highest max &amp; min)</span>
-        <span><i class="swatch line" style="border-color:var(--accent-light);border-top-style:dashed"></i> record lows (lowest max &amp; min)</span>
-    </div>`;
+function rainChart(day, forecastRain, since9) {
+    const orange = "var(--forecast)";
+    const hi = Math.max(day.rain_p97_5, day.rain_rec, forecastRain, since9);
+    const pad = Math.max(1.0, hi * 0.05);
+    const dMax = Math.ceil(hi + pad);
+    return vChart({
+        dMin: 0, dMax, unit: "mm",
+        step: dMax <= 8 ? 1 : (dMax <= 16 ? 2 : (dMax <= 40 ? 5 : 10)),
+        ariaLabel: "Forecast rainfall versus historical distribution and record",
+        bands: [
+            { from: 0, to: day.rain_p97_5, fill: "var(--band-outer)" },
+            { from: 0, to: day.rain_p84, fill: "var(--band-inner)" },
+        ],
+        lines: [
+            { value: day.rain_p50, color: "var(--median)", label: "median " + fmt(day.rain_p50) + "mm" },
+            { value: forecastRain, color: orange, big: true, label: "Forecast " + fmt(forecastRain) + "mm" },
+            { value: since9, color: "var(--current)", big: true, label: "Since 9am " + fmt(since9) + "mm" },
+            { value: day.rain_rec, color: orange, dashed: true, label: "Wettest " + fmt(day.rain_rec) + "mm" },
+        ],
+    });
 }
 
 function verdictText(sigma) {
@@ -276,12 +309,23 @@ function verdictText(sigma) {
     return (sigma > 0 ? "extraordinarily warm" : "extraordinarily cold") + " for the date";
 }
 
+function rainVerdictText(rain, day) {
+    if (rain < 0.2) return "a dry day";
+    if (rain <= day.rain_p50) return "on the drier side";
+    if (rain <= day.rain_p84) return "around a typical wet day";
+    if (rain <= day.rain_p97_5) return "a notably wet day";
+    return "an exceptionally wet day";
+}
+
 async function main() {
     const content = document.getElementById("content");
     try {
+        const fxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
+            + `&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`
+            + `&hourly=precipitation&timezone=Australia%2FMelbourne&forecast_days=1`;
         const [fxRes, climRes] = await Promise.all([
-            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Australia%2FMelbourne&forecast_days=1`),
-            fetch("climatology.json?v=2", { cache: "no-cache" })
+            fetch(fxUrl),
+            fetch("climatology.json?v=3", { cache: "no-cache" })
         ]);
         if (!fxRes.ok) throw new Error("Weather API returned " + fxRes.status);
         if (!climRes.ok) throw new Error("Could not load climatology.json");
@@ -297,10 +341,23 @@ async function main() {
         const currentTemp = fx.current.temperature_2m;
         const forecastMax = fx.daily.temperature_2m_max[0];
         const forecastMin = fx.daily.temperature_2m_min[0];
+        const forecastRain = fx.daily.precipitation_sum[0] || 0;
+
+        // rainfall since 9am local: sum hourly precip from 09:00 up to the current hour
+        let since9 = 0;
+        if (fx.hourly && fx.hourly.precipitation) {
+            const curHour = parseInt(fx.current.time.slice(11, 13), 10);
+            fx.hourly.time.forEach((t, i) => {
+                const h = parseInt(t.slice(11, 13), 10);
+                if (h >= 9 && h <= curHour) since9 += fx.hourly.precipitation[i] || 0;
+            });
+        }
+        since9 = Math.round(since9 * 10) / 10;
 
         const sigma = (forecastMax - day.mean) / day.std;
         const rank = Math.round(rankFromPercentiles(forecastMax, day));
         const desc = verdictText(sigma);
+        const rainDesc = rainVerdictText(forecastRain, day);
 
         const niceDate = d.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
         const recDate = iso => {
@@ -313,6 +370,8 @@ async function main() {
                 <div class="stat"><div class="label">Right now</div><div class="value">${fmt(currentTemp)}<small>&deg;C</small></div></div>
                 <div class="stat"><div class="label">Forecast high</div><div class="value">${fmt(forecastMax)}<small>&deg;C</small></div></div>
                 <div class="stat"><div class="label">Forecast low</div><div class="value">${fmt(forecastMin)}<small>&deg;C</small></div></div>
+                <div class="stat"><div class="label">Rain since 9am</div><div class="value">${fmt(since9)}<small>mm</small></div></div>
+                <div class="stat"><div class="label">Rain forecast</div><div class="value">${fmt(forecastRain)}<small>mm</small></div></div>
             </div>
 
             <div class="verdict">
@@ -322,10 +381,28 @@ async function main() {
                 from the mean, warmer than about <strong>${rank}%</strong> of days on this date historically.
             </div>
 
+            <div class="verdict" style="border-left-color:var(--accent-light)">
+                With <strong style="color:var(--accent-light)">${fmt(forecastRain)}&nbsp;mm</strong> forecast, today looks like
+                <strong style="color:var(--accent-light)">${rainDesc}</strong> &mdash; measurable rain falls on about
+                <strong style="color:var(--accent-light)">${fmt(day.rain_pop, 0)}%</strong> of days around this date.
+            </div>
+
             <div class="card">
-                <h2>Forecast high vs. the historical distribution</h2>
-                <p class="hint">${niceDate} &middot; based on ${day.n} historical observations within &plusmn;7 days of this date.</p>
-                ${buildChart(day, forecastMax, currentTemp)}
+                <h2>Today vs. the historical distribution</h2>
+                <p class="hint">${niceDate} &middot; &plusmn;7-day window, 1990&ndash;2024 (${day.n} days).</p>
+                <div class="charts">
+                    <div class="chart"><h3>Max temperature</h3>${tempChart(day, forecastMax, currentTemp)}</div>
+                    <div class="chart"><h3>Rainfall</h3>${rainChart(day, forecastRain, since9)}</div>
+                </div>
+                <div class="legend">
+                    <span><i class="swatch" style="background:var(--band-outer)"></i> outer range (to 97.5%)</span>
+                    <span><i class="swatch" style="background:var(--band-inner)"></i> inner range (to 84%)</span>
+                    <span><i class="swatch line" style="border-color:var(--median)"></i> median</span>
+                    <span><i class="swatch line" style="border-color:var(--forecast)"></i> forecast</span>
+                    <span><i class="swatch line" style="border-color:var(--current)"></i> current</span>
+                    <span><i class="swatch line" style="border-color:var(--forecast);border-top-style:dashed"></i> record high / wettest</span>
+                    <span><i class="swatch line" style="border-color:var(--accent-light);border-top-style:dashed"></i> record low</span>
+                </div>
             </div>
 
             <div class="card">
@@ -344,7 +421,22 @@ async function main() {
             </div>
 
             <div class="card">
-                <h2>Records for this date</h2>
+                <h2>Rainfall for this date</h2>
+                <p class="hint">Daily totals over &plusmn;7 days (1990&ndash;2024). Measurable rain on about ${fmt(day.rain_pop, 0)}% of days.</p>
+                <table>
+                    <thead><tr><th>Measure</th><th>Rain</th><th>Note</th></tr></thead>
+                    <tbody>
+                        <tr><td>Median (50%)</td><td>${fmt(day.rain_p50)}&thinsp;mm</td><td>half of days are drier</td></tr>
+                        <tr><td>84%</td><td>${fmt(day.rain_p84)}&thinsp;mm</td><td>a wet day</td></tr>
+                        <tr><td>97.5%</td><td>${fmt(day.rain_p97_5)}&thinsp;mm</td><td>very wet</td></tr>
+                        <tr><td>Wettest on record</td><td>${fmt(day.rain_rec)}&thinsp;mm</td><td>${recDate(day.rain_rec_date)}</td></tr>
+                        <tr><td class="highlight">Today&rsquo;s forecast</td><td class="highlight">${fmt(forecastRain)}&thinsp;mm</td><td class="highlight">${rainDesc}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Temperature records for this date</h2>
                 <p class="hint">Most extreme values ever recorded within &plusmn;7 days of this date (1990&ndash;2024).</p>
                 <table>
                     <thead><tr><th>Record</th><th>Temp</th><th>When</th></tr></thead>
@@ -358,9 +450,9 @@ async function main() {
             </div>`;
 
         document.getElementById("meta").innerHTML =
-            `Live conditions from <a href="https://open-meteo.com/">Open-Meteo</a>. `
+            `Live conditions from <a href="https://open-meteo.com/">Open-Meteo</a> &middot; rainfall since 9am summed from hourly data. `
             + `Climatology: ${clim.meta.source}, ${clim.meta.period}, ${clim.meta.variable}. `
-            + `&sigma; is the standard deviation of historical daily-max temperatures in a &plusmn;${clim.meta.window_days}-day window.`;
+            + `&sigma; (temperature only) is the standard deviation of historical daily-max temperatures in a &plusmn;${clim.meta.window_days}-day window.`;
     } catch (err) {
         content.innerHTML = `<div class="error">Couldn&rsquo;t load the weather: ${err.message}</div>`;
     }

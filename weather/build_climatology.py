@@ -19,10 +19,12 @@ START, END = "1990-01-01", "2024-12-31"
 WINDOW = 7  # +/- days
 OUT = "weather/climatology.json"
 
+RAIN_THRESHOLD = 0.2  # mm; a day counts as "wet" above this
+
 URL = (
     "https://archive-api.open-meteo.com/v1/archive"
     f"?latitude={LAT}&longitude={LON}&start_date={START}&end_date={END}"
-    "&daily=temperature_2m_max,temperature_2m_min&timezone=Australia%2FMelbourne"
+    "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Australia%2FMelbourne"
 )
 
 
@@ -46,14 +48,13 @@ def main():
     times = raw["daily"]["time"]
     maxes = raw["daily"]["temperature_2m_max"]
     mins = raw["daily"]["temperature_2m_min"]
+    precs = raw["daily"]["precipitation_sum"]
 
-    # (month, day) -> list of (max, min, isodate)
+    # (month, day) -> list of (max, min, precip, isodate); any field may be None
     by_md = defaultdict(list)
-    for t, vmax, vmin in zip(times, maxes, mins):
-        if vmax is None or vmin is None:
-            continue
+    for t, vmax, vmin, vprec in zip(times, maxes, mins, precs):
         d = dt.date.fromisoformat(t)
-        by_md[(d.month, d.day)].append((vmax, vmin, t))
+        by_md[(d.month, d.day)].append((vmax, vmin, vprec, t))
 
     # 366 ordered (month, day) slots using a leap year.
     base = dt.date(2000, 1, 1)
@@ -70,16 +71,26 @@ def main():
     out = []
     for i, md in enumerate(slots):
         rows = windowed(md)
-        vals = sorted(r[0] for r in rows)  # daily-max values, for the distribution
+
+        # ── temperature distribution (daily max) ──
+        trows = [r for r in rows if r[0] is not None and r[1] is not None]
+        vals = sorted(r[0] for r in trows)
         n = len(vals)
         mean = sum(vals) / n
         std = math.sqrt(sum((x - mean) ** 2 for x in vals) / n)
 
-        # records over the same window (value, date)
-        rec_high_max = max(rows, key=lambda r: r[0])   # hottest day (highest max)
-        rec_low_max = min(rows, key=lambda r: r[0])     # coldest day (lowest max)
-        rec_high_min = max(rows, key=lambda r: r[1])    # warmest night (highest min)
-        rec_low_min = min(rows, key=lambda r: r[1])     # coldest night (lowest min)
+        rec_high_max = max(trows, key=lambda r: r[0])   # hottest day (highest max)
+        rec_low_max = min(trows, key=lambda r: r[0])     # coldest day (lowest max)
+        rec_high_min = max(trows, key=lambda r: r[1])    # warmest night (highest min)
+        rec_low_min = min(trows, key=lambda r: r[1])     # coldest night (lowest min)
+
+        # ── rainfall distribution (daily precipitation sum) ──
+        prows = [r for r in rows if r[2] is not None]
+        rvals = sorted(r[2] for r in prows)
+        rn = len(rvals)
+        rmean = sum(rvals) / rn
+        pop = sum(1 for v in rvals if v > RAIN_THRESHOLD) / rn * 100  # % of wet days
+        rain_rec = max(prows, key=lambda r: r[2])        # wettest day on record
 
         out.append({
             "doy": i + 1, "month": md[0], "day": md[1], "n": n,
@@ -89,10 +100,17 @@ def main():
             "p84": round(percentile(vals, 84), 2),
             "p97_5": round(percentile(vals, 97.5), 2),
             "mean": round(mean, 2), "std": round(std, 2),
-            "rec_high_max": round(rec_high_max[0], 1), "rec_high_max_date": rec_high_max[2],
-            "rec_low_max": round(rec_low_max[0], 1), "rec_low_max_date": rec_low_max[2],
-            "rec_high_min": round(rec_high_min[1], 1), "rec_high_min_date": rec_high_min[2],
-            "rec_low_min": round(rec_low_min[1], 1), "rec_low_min_date": rec_low_min[2],
+            "rec_high_max": round(rec_high_max[0], 1), "rec_high_max_date": rec_high_max[3],
+            "rec_low_max": round(rec_low_max[0], 1), "rec_low_max_date": rec_low_max[3],
+            "rec_high_min": round(rec_high_min[1], 1), "rec_high_min_date": rec_high_min[3],
+            "rec_low_min": round(rec_low_min[1], 1), "rec_low_min_date": rec_low_min[3],
+            # rainfall (mm)
+            "rain_p50": round(percentile(rvals, 50), 2),
+            "rain_p84": round(percentile(rvals, 84), 2),
+            "rain_p97_5": round(percentile(rvals, 97.5), 2),
+            "rain_mean": round(rmean, 2),
+            "rain_pop": round(pop, 1),
+            "rain_rec": round(rain_rec[2], 1), "rain_rec_date": rain_rec[3],
         })
 
     meta = {
@@ -100,8 +118,9 @@ def main():
         "latitude": raw["latitude"], "longitude": raw["longitude"],
         "source": "Open-Meteo ERA5 archive",
         "period": f"{times[0]} to {times[-1]}",
-        "variable": "daily maximum 2m temperature (degC); records also cover daily minimum",
+        "variable": "daily max/min 2m temperature (degC) and precipitation sum (mm)",
         "window_days": WINDOW,
+        "rain_threshold_mm": RAIN_THRESHOLD,
         "note": f"Percentiles and records computed over a +/-{WINDOW} day window across all years.",
     }
 

@@ -13,7 +13,9 @@
       "Bash(curl -s \"http://localhost:8765/climatology.json?v=2\")",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); j=[x for x in d['days'] if x['month']==6 and x['day']==12][0]; print\\('served has records:', 'rec_high_max' in j, j.get\\('rec_high_max'\\), j.get\\('rec_high_max_date'\\)\\)\")",
       "Bash(kill %1)",
-      "Bash(pkill -f \"http.server 8765\")"
+      "Bash(pkill -f \"http.server 8765\")",
+      "Bash(curl -s \"https://api.open-meteo.com/v1/forecast?latitude=-37.8136&longitude=144.9631&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=precipitation&timezone=Australia%2FMelbourne&forecast_days=1\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('current:',d['current']\\); print\\('daily:',d['daily']\\); print\\('hourly times[8:12]:',d['hourly']['time'][8:12]\\); print\\('hourly precip:',d['hourly']['precipitation']\\)\")"
     ]
   }
 }
