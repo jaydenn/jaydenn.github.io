@@ -22,7 +22,7 @@ OUT = "weather/climatology.json"
 URL = (
     "https://archive-api.open-meteo.com/v1/archive"
     f"?latitude={LAT}&longitude={LON}&start_date={START}&end_date={END}"
-    "&daily=temperature_2m_max&timezone=Australia%2FMelbourne"
+    "&daily=temperature_2m_max,temperature_2m_min&timezone=Australia%2FMelbourne"
 )
 
 
@@ -45,13 +45,15 @@ def main():
 
     times = raw["daily"]["time"]
     maxes = raw["daily"]["temperature_2m_max"]
+    mins = raw["daily"]["temperature_2m_min"]
 
-    by_md = defaultdict(list)  # (month, day) -> [values]
-    for t, v in zip(times, maxes):
-        if v is None:
+    # (month, day) -> list of (max, min, isodate)
+    by_md = defaultdict(list)
+    for t, vmax, vmin in zip(times, maxes, mins):
+        if vmax is None or vmin is None:
             continue
         d = dt.date.fromisoformat(t)
-        by_md[(d.month, d.day)].append(v)
+        by_md[(d.month, d.day)].append((vmax, vmin, t))
 
     # 366 ordered (month, day) slots using a leap year.
     base = dt.date(2000, 1, 1)
@@ -60,17 +62,25 @@ def main():
 
     def windowed(md):
         idx = slot_index[md]
-        vals = []
+        rows = []
         for off in range(-WINDOW, WINDOW + 1):
-            vals.extend(by_md.get(slots[(idx + off) % 366], []))
-        return vals
+            rows.extend(by_md.get(slots[(idx + off) % 366], []))
+        return rows
 
     out = []
     for i, md in enumerate(slots):
-        vals = sorted(windowed(md))
+        rows = windowed(md)
+        vals = sorted(r[0] for r in rows)  # daily-max values, for the distribution
         n = len(vals)
         mean = sum(vals) / n
         std = math.sqrt(sum((x - mean) ** 2 for x in vals) / n)
+
+        # records over the same window (value, date)
+        rec_high_max = max(rows, key=lambda r: r[0])   # hottest day (highest max)
+        rec_low_max = min(rows, key=lambda r: r[0])     # coldest day (lowest max)
+        rec_high_min = max(rows, key=lambda r: r[1])    # warmest night (highest min)
+        rec_low_min = min(rows, key=lambda r: r[1])     # coldest night (lowest min)
+
         out.append({
             "doy": i + 1, "month": md[0], "day": md[1], "n": n,
             "p2_5": round(percentile(vals, 2.5), 2),
@@ -79,6 +89,10 @@ def main():
             "p84": round(percentile(vals, 84), 2),
             "p97_5": round(percentile(vals, 97.5), 2),
             "mean": round(mean, 2), "std": round(std, 2),
+            "rec_high_max": round(rec_high_max[0], 1), "rec_high_max_date": rec_high_max[2],
+            "rec_low_max": round(rec_low_max[0], 1), "rec_low_max_date": rec_low_max[2],
+            "rec_high_min": round(rec_high_min[1], 1), "rec_high_min_date": rec_high_min[2],
+            "rec_low_min": round(rec_low_min[1], 1), "rec_low_min_date": rec_low_min[2],
         })
 
     meta = {
@@ -86,9 +100,9 @@ def main():
         "latitude": raw["latitude"], "longitude": raw["longitude"],
         "source": "Open-Meteo ERA5 archive",
         "period": f"{times[0]} to {times[-1]}",
-        "variable": "daily maximum 2m temperature (degC)",
+        "variable": "daily maximum 2m temperature (degC); records also cover daily minimum",
         "window_days": WINDOW,
-        "note": f"Percentiles computed over a +/-{WINDOW} day window across all years.",
+        "note": f"Percentiles and records computed over a +/-{WINDOW} day window across all years.",
     }
 
     with open(OUT, "w", encoding="utf-8") as f:
