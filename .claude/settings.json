@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://api.open-meteo.com/v1/forecast?latitude=-37.8136&longitude=144.9631&current=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Australia%2FMelbourne&forecast_days=1\")",
+      "Bash(curl -s \"https://archive-api.open-meteo.com/v1/archive?latitude=-37.8136&longitude=144.9631&start_date=1990-01-01&end_date=2024-12-31&daily=temperature_2m_max&timezone=Australia%2FMelbourne\" -o weather/_archive_raw.json)",
+      "Bash(python weather/_build_climatology.py)",
+      "Bash(python -)"
+    ]
+  }
+}
