@@ -2,16 +2,13 @@
 Fetch the current day's new arXiv submissions for given categories via RSS
 and write them to a scored CSV.
 
-arXiv publishes one RSS feed per category at:
+arXiv publishes one RSS 2.0 feed per category at:
     https://rss.arxiv.org/rss/{category}
 
-Each feed contains exactly today's announcement batch (new submissions +
-cross-lists).  RSS has no rate limits and always reflects the current day,
-unlike the search API which requires pagination, has rate limits, and can
-return stale ordering.
+Each feed contains today's announcement batch (new submissions + cross-lists).
+RSS has no rate limits and always reflects the current day.
 
-Dependencies: feedparser  (pip install feedparser)
-The 'arxiv' package is no longer required.
+No external dependencies — stdlib only.
 """
 
 from __future__ import annotations
@@ -19,11 +16,17 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import email.utils
 import html as html_mod
 import re
+import urllib.error
+import urllib.request
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
-import feedparser  # pip install feedparser
+# Only the prefixed elements carry namespaces; core RSS 2.0 elements do not.
+_DC = "http://purl.org/dc/elements/1.1/"
+_AX = "http://arxiv.org/schemas/atom"
 
 TIER_SCORES = {1: 4, 2: 3, 3: 2, 4: 1}
 DEFAULT_KEYWORDS_PATH = Path(__file__).parent / "jay_keywords.txt"
@@ -63,11 +66,34 @@ def score_paper(title: str, abstract: str, keywords: dict[int, list[str]]) -> in
     return total
 
 
-# ── RSS helpers ──────────────────────────────────────────────────────────────
+# ── Parsing helpers ──────────────────────────────────────────────────────────
+
+def _txt(el: ET.Element | None, default: str = "") -> str:
+    if el is None or not el.text:
+        return default
+    return el.text.strip()
+
 
 def _strip_html(text: str) -> str:
     text = re.sub(r"<[^>]+>", " ", text)
     return " ".join(html_mod.unescape(text).split())
+
+
+def _clean_abstract(desc: str) -> str:
+    """Strip the 'arXiv:XXXX Announce Type: ...\nAbstract:' prefix arXiv adds."""
+    desc = re.sub(
+        r"^arXiv:\S+\s+Announce\s+Type:\s+\S+\s*\n?Abstract:\s*",
+        "", desc.strip(), flags=re.IGNORECASE,
+    )
+    return _strip_html(desc).strip()
+
+
+def _parse_pubdate(s: str) -> dt.datetime:
+    """Parse an RFC 2822 pubDate string into an aware UTC datetime."""
+    try:
+        return email.utils.parsedate_to_datetime(s).astimezone(dt.timezone.utc)
+    except Exception:
+        return dt.datetime.now(dt.timezone.utc)
 
 
 def _arxiv_id_from_url(url: str) -> str:
@@ -75,48 +101,41 @@ def _arxiv_id_from_url(url: str) -> str:
     return m.group(1) if m else url
 
 
+# ── RSS fetching ─────────────────────────────────────────────────────────────
+
 def fetch_rss_category(category: str) -> list[dict]:
     """Return today's new + cross-list submissions for one category via RSS."""
     url = f"https://rss.arxiv.org/rss/{category}"
-    feed = feedparser.parse(url)
+    req = urllib.request.Request(url, headers={"User-Agent": "arxiv-digest/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read()
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Could not fetch RSS for {category!r}: {e}") from e
 
-    if feed.bozo and not feed.entries:
-        raise RuntimeError(
-            f"Could not parse RSS for {category!r}: {feed.bozo_exception}"
-        )
+    root = ET.fromstring(raw)
+    channel = root.find("channel")
+    if channel is None:
+        return []
 
     papers = []
-    for entry in feed.entries:
-        # Skip replacements — only want new submissions and cross-lists
-        announce = getattr(entry, "arxiv_announce_type", "new")
+    for item in channel.findall("item"):
+        # Skip replacements; keep new submissions and cross-lists
+        announce = _txt(item.find(f"{{{_AX}}}announce_type"), "new")
         if announce in ("replace", "replace-cross"):
             continue
 
-        link = entry.get("link", "")
+        link     = _txt(item.find("link"))
         arxiv_id = _arxiv_id_from_url(link)
+        title    = _txt(item.find("title"))
+        abstract = _clean_abstract(_txt(item.find("description")))
+        authors  = _txt(item.find(f"{{{_DC}}}creator"))
+        pub_date = _txt(item.find("pubDate"))
 
-        # Titles in the feed often have "(arXiv:XXXX.XXXXXvN [cat])" appended
-        title = re.sub(r"\s*\(arXiv:\S+\)\s*$", "", entry.get("title", "")).strip()
+        cats    = [c.text.strip() for c in item.findall("category") if c.text]
+        primary = cats[0] if cats else category
 
-        abstract = _strip_html(entry.get("summary", ""))
-
-        # Authors: feedparser exposes dc:creator as entry.author (semicolon-sep string)
-        # or as a list via entry.authors depending on feed format
-        if hasattr(entry, "authors") and entry.authors:
-            authors = "; ".join(a.get("name", "") for a in entry.authors)
-        else:
-            authors = entry.get("author", "")
-
-        # Categories from <category> / <tags>
-        tags = [t.get("term", "") for t in entry.get("tags", [])]
-        primary = tags[0] if tags else category
-
-        pub = entry.get("published_parsed") or entry.get("updated_parsed")
-        pub_dt = (
-            dt.datetime(*pub[:6], tzinfo=dt.timezone.utc)
-            if pub
-            else dt.datetime.now(dt.timezone.utc)
-        )
+        pub_dt = _parse_pubdate(pub_date) if pub_date else dt.datetime.now(dt.timezone.utc)
 
         papers.append({
             "arxiv_id":         arxiv_id,
@@ -125,7 +144,7 @@ def fetch_rss_category(category: str) -> list[dict]:
             "title":            title,
             "authors":          authors,
             "primary_category": primary,
-            "categories":       "; ".join(tags),
+            "categories":       "; ".join(cats),
             "abstract":         abstract,
             "pdf_url":          f"https://arxiv.org/pdf/{arxiv_id}",
             "entry_url":        link,
