@@ -149,6 +149,22 @@
     .meta { font-size: 0.78rem; color: #999; margin-top: 20px; line-height: 1.5; }
     .meta a { color: var(--accent-light); }
 
+    .date-stamp {
+        font-size: 0.88rem;
+        color: var(--muted);
+        margin: 0 0 20px;
+        padding: 9px 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .date-stamp strong { color: var(--accent); }
+    .date-stamp .fetch-time { opacity: 0.7; font-size: 0.82rem; }
+
     .error { color: #b03030; background: #fdecec; border: 1px solid #f5c6c6; padding: 14px; border-radius: 6px; }
     .loading { color: var(--muted); }
 
@@ -320,11 +336,13 @@ function rainVerdictText(rain, day) {
 async function main() {
     const content = document.getElementById("content");
     try {
+        // _t rounded to the hour busts the browser cache without hammering the API
+        const cacheBust = Math.floor(Date.now() / 3_600_000);
         const fxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
             + `&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`
-            + `&hourly=precipitation&timezone=Australia%2FMelbourne&forecast_days=1`;
+            + `&hourly=precipitation&timezone=Australia%2FMelbourne&forecast_days=1&_t=${cacheBust}`;
         const [fxRes, climRes] = await Promise.all([
-            fetch(fxUrl),
+            fetch(fxUrl, { cache: "no-store" }),
             fetch("climatology.json?v=3", { cache: "no-cache" })
         ]);
         if (!fxRes.ok) throw new Error("Weather API returned " + fxRes.status);
@@ -360,12 +378,17 @@ async function main() {
         const rainDesc = rainVerdictText(forecastRain, day);
 
         const niceDate = d.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+        const fetchedAt = new Date().toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit", timeZone: "Australia/Melbourne" });
         const recDate = iso => {
             const rd = new Date((iso || "") + "T00:00:00");
             return isNaN(rd) ? "&mdash;" : rd.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
         };
 
         content.innerHTML = `
+            <div class="date-stamp">
+                <span><strong>${niceDate}</strong></span>
+                <span class="fetch-time">fetched at ${fetchedAt} AEST</span>
+            </div>
             <div class="now">
                 <div class="stat"><div class="label">Right now</div><div class="value">${fmt(currentTemp)}<small>&deg;C</small></div></div>
                 <div class="stat"><div class="label">Forecast high</div><div class="value">${fmt(forecastMax)}<small>&deg;C</small></div></div>
