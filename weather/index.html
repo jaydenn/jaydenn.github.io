@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Melbourne Weather in Context</title>
+<title>Weather in Context</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -45,7 +45,39 @@
         margin: 0 0 4px;
     }
 
-    .subtitle { color: var(--muted); font-size: 0.95rem; margin: 0 0 28px; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin: 0 0 16px; }
+
+    /* ── City selector ── */
+    .selector-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .city-btn {
+        padding: 6px 16px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--card);
+        color: var(--muted);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+        line-height: 1.5;
+    }
+
+    .city-btn:hover {
+        border-color: var(--accent-light);
+        color: var(--accent);
+    }
+
+    .city-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+    }
 
     /* ── Current conditions ── */
     .now {
@@ -176,8 +208,15 @@
 </head>
 <body>
 <div class="wrap">
-    <h1>Melbourne weather, in context</h1>
+    <h1 id="page-title">Melbourne weather, in context</h1>
     <p class="subtitle">Today&rsquo;s forecast against 35 years of history for this date.</p>
+
+    <div class="selector-bar">
+        <button class="city-btn active" data-city="melbourne">Melbourne</button>
+        <button class="city-btn" data-city="chicago">Chicago</button>
+        <button class="city-btn" data-city="london">London</button>
+        <button class="city-btn" data-city="phoenix">Phoenix</button>
+    </div>
 
     <div id="content">
         <p class="loading">Loading current conditions and climatology&hellip;</p>
@@ -187,7 +226,18 @@
 </div>
 
 <script>
-const LAT = -37.8136, LON = 144.9631;
+const CITIES = {
+    melbourne: { name: "Melbourne", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne", climFile: "climatology.json",         primaryModel: "bom_access_global" },
+    chicago:   { name: "Chicago",   lat: 41.8781,  lon: -87.6298,  tz: "America/Chicago",   climFile: "climatology_chicago.json", primaryModel: null },
+    london:    { name: "London",    lat: 51.5074,  lon: -0.1278,   tz: "Europe/London",     climFile: "climatology_london.json",  primaryModel: null },
+    phoenix:   { name: "Phoenix",   lat: 33.4484,  lon: -112.0740, tz: "America/Phoenix",   climFile: "climatology_phoenix.json", primaryModel: null },
+};
+const FALLBACK_MODEL = "ecmwf_ifs025";
+const MODEL_NAMES = {
+    bom_access_global: "BOM ACCESS-G",
+    ecmwf_ifs025:      "ECMWF IFS 0.25°",
+};
+
 const fmt = (x, d = 1) => (x === null || x === undefined || isNaN(x)) ? "–" : x.toFixed(d);
 
 // Linear interpolation of the forecast's percentile rank from the 5 stored points.
@@ -213,14 +263,12 @@ function rankFromPercentiles(t, day) {
 }
 
 // Generic vertical distribution chart.
-// opts: { dMin, dMax, step, unit, bands:[{from,to,fill}], lines:[{value,color,label,dashed,big}], ariaLabel }
 function vChart(opts) {
     const W = 300, H = 430;
     const axisX = 42, bandX0 = 60, bandX1 = 106, labelX = bandX1 + 6;
     const yTop = 30, yBot = 396;
     const y = v => yBot - (v - opts.dMin) / (opts.dMax - opts.dMin) * (yBot - yTop);
 
-    // axis + ticks
     let ticks = `<line x1="${axisX}" y1="${yTop - 8}" x2="${axisX}" y2="${yBot + 6}" stroke="#ddd"/>`;
     ticks += `<text x="${axisX - 6}" y="${yTop - 12}" text-anchor="end" font-size="10" fill="#aaa">${opts.unit}</text>`;
     for (let t = Math.ceil(opts.dMin / opts.step) * opts.step; t <= opts.dMax + 1e-6; t += opts.step) {
@@ -229,14 +277,12 @@ function vChart(opts) {
         ticks += `<text x="${axisX - 7}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#888">${+t.toFixed(2)}</text>`;
     }
 
-    // bands (vertical rectangles)
     let bands = "";
     for (const b of opts.bands) {
         const yt = y(b.to), yb = y(b.from);
         bands += `<rect x="${bandX0}" y="${yt.toFixed(1)}" width="${bandX1 - bandX0}" height="${Math.max(0, yb - yt).toFixed(1)}" fill="${b.fill}" rx="3"/>`;
     }
 
-    // reference lines (median / markers / records)
     const lines = opts.lines.filter(l => Number.isFinite(l.value));
     let lineSvg = "";
     for (const l of lines) {
@@ -250,7 +296,6 @@ function vChart(opts) {
         }
     }
 
-    // labels on the right, nudged downward to avoid overlap
     const GAP = 13;
     const sorted = lines.map(l => ({ ...l, yIdeal: y(l.value) })).sort((a, b) => a.yIdeal - b.yIdeal);
     let prev = -Infinity;
@@ -279,24 +324,24 @@ function tempChart(day, forecastMax, currentTemp) {
         step: range <= 15 ? 2 : (range <= 30 ? 5 : 10),
         ariaLabel: "Forecast max temperature versus historical distribution and records",
         bands: [
-            { from: day.p2_5, to: day.p97_5, fill: "var(--band-outer)" },
-            { from: day.p16, to: day.p84, fill: "var(--band-inner)" },
+            { from: day.p2_5,  to: day.p97_5, fill: "var(--band-outer)" },
+            { from: day.p16,   to: day.p84,   fill: "var(--band-inner)" },
         ],
         lines: [
-            { value: day.p50, color: "var(--median)", label: "median " + fmt(day.p50) + "&deg;" },
-            { value: forecastMax, color: orange, big: true, label: "Forecast " + fmt(forecastMax) + "&deg;" },
-            { value: currentTemp, color: "var(--current)", big: true, label: "Now " + fmt(currentTemp) + "&deg;" },
-            { value: day.rec_high_max, color: orange, dashed: true, label: "Highest max " + fmt(day.rec_high_max) + "&deg;" },
-            { value: day.rec_high_min, color: orange, dashed: true, label: "Highest min " + fmt(day.rec_high_min) + "&deg;" },
-            { value: day.rec_low_max, color: blue, dashed: true, label: "Lowest max " + fmt(day.rec_low_max) + "&deg;" },
-            { value: day.rec_low_min, color: blue, dashed: true, label: "Lowest min " + fmt(day.rec_low_min) + "&deg;" },
+            { value: day.p50,        color: "var(--median)",       label: "median " + fmt(day.p50) + "°" },
+            { value: forecastMax,    color: orange,  big: true,    label: "Forecast " + fmt(forecastMax) + "°" },
+            { value: currentTemp,    color: "var(--current)", big: true, label: "Now " + fmt(currentTemp) + "°" },
+            { value: day.rec_high_max, color: orange,  dashed: true, label: "Highest max " + fmt(day.rec_high_max) + "°" },
+            { value: day.rec_high_min, color: orange,  dashed: true, label: "Highest min " + fmt(day.rec_high_min) + "°" },
+            { value: day.rec_low_max,  color: blue,    dashed: true, label: "Lowest max " + fmt(day.rec_low_max) + "°" },
+            { value: day.rec_low_min,  color: blue,    dashed: true, label: "Lowest min " + fmt(day.rec_low_min) + "°" },
         ],
     });
 }
 
-function rainChart(day, forecastRain, since9) {
+function rainChart(day, forecastRain, rainToday) {
     const orange = "var(--forecast)";
-    const hi = Math.max(day.rain_p97_5, day.rain_rec, forecastRain, since9);
+    const hi = Math.max(day.rain_p97_5, day.rain_rec, forecastRain, rainToday);
     const pad = Math.max(1.0, hi * 0.05);
     const dMax = Math.ceil(hi + pad);
     return vChart({
@@ -305,13 +350,13 @@ function rainChart(day, forecastRain, since9) {
         ariaLabel: "Forecast rainfall versus historical distribution and record",
         bands: [
             { from: 0, to: day.rain_p97_5, fill: "var(--band-outer)" },
-            { from: 0, to: day.rain_p84, fill: "var(--band-inner)" },
+            { from: 0, to: day.rain_p84,   fill: "var(--band-inner)" },
         ],
         lines: [
-            { value: day.rain_p50, color: "var(--median)", label: "median " + fmt(day.rain_p50) + "mm" },
-            { value: forecastRain, color: orange, big: true, label: "Forecast " + fmt(forecastRain) + "mm" },
-            { value: since9, color: "var(--current)", big: true, label: "Since 9am " + fmt(since9) + "mm" },
-            { value: day.rain_rec, color: orange, dashed: true, label: "Wettest " + fmt(day.rain_rec) + "mm" },
+            { value: day.rain_p50, color: "var(--median)",       label: "median " + fmt(day.rain_p50) + "mm" },
+            { value: forecastRain, color: orange, big: true,     label: "Forecast " + fmt(forecastRain) + "mm" },
+            { value: rainToday,    color: "var(--current)", big: true, label: "Rain today " + fmt(rainToday) + "mm" },
+            { value: day.rain_rec, color: orange, dashed: true,  label: "Wettest " + fmt(day.rain_rec) + "mm" },
         ],
     });
 }
@@ -319,79 +364,99 @@ function rainChart(day, forecastRain, since9) {
 function verdictText(sigma) {
     const a = Math.abs(sigma);
     if (a < 0.5) return "right around the seasonal normal";
-    if (a < 1) return (sigma > 0 ? "a little warmer" : "a little cooler") + " than usual";
-    if (a < 2) return (sigma > 0 ? "notably warmer" : "notably cooler") + " than usual";
-    if (a < 3) return (sigma > 0 ? "much warmer" : "much colder") + " than usual";
+    if (a < 1)   return (sigma > 0 ? "a little warmer" : "a little cooler") + " than usual";
+    if (a < 2)   return (sigma > 0 ? "notably warmer" : "notably cooler") + " than usual";
+    if (a < 3)   return (sigma > 0 ? "much warmer" : "much colder") + " than usual";
     return (sigma > 0 ? "extraordinarily warm" : "extraordinarily cold") + " for the date";
 }
 
 function rainVerdictText(rain, day) {
-    if (rain < 0.2) return "a dry day";
-    if (rain <= day.rain_p50) return "on the drier side";
-    if (rain <= day.rain_p84) return "around a typical wet day";
+    if (rain < 0.2)            return "a dry day";
+    if (rain <= day.rain_p50)  return "on the drier side";
+    if (rain <= day.rain_p84)  return "around a typical wet day";
     if (rain <= day.rain_p97_5) return "a notably wet day";
     return "an exceptionally wet day";
 }
 
-async function main() {
+async function loadCity(cityKey) {
+    const city = CITIES[cityKey];
+    localStorage.setItem("weatherCity", cityKey);
+
+    document.querySelectorAll(".city-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.city === cityKey);
+    });
+    document.title = city.name + " Weather in Context";
+    document.getElementById("page-title").textContent = city.name + " weather, in context";
+
     const content = document.getElementById("content");
+    content.innerHTML = `<p class="loading">Loading current conditions and climatology…</p>`;
+    document.getElementById("meta").textContent = "";
+
     try {
-        // _t rounded to the hour busts the browser cache without hammering the API
         const cacheBust = Math.floor(Date.now() / 3_600_000);
-        const base = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
-            + `&timezone=Australia%2FMelbourne&forecast_days=1&_t=${cacheBust}`;
+        const tzEnc = encodeURIComponent(city.tz);
+        const base = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}`
+            + `&timezone=${tzEnc}&forecast_days=1&_t=${cacheBust}`;
         const daily = `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`;
-        // Fetch current/hourly conditions (best_match, always available) and both
-        // forecast models in parallel, then prefer BOM if it has data.
-        const [currentRes, bomRes, ecmwfRes, climRes] = await Promise.all([
+
+        const [currentRes, primaryRes, fallbackRes, climRes] = await Promise.all([
             fetch(base + `&current=temperature_2m,precipitation&hourly=precipitation`, { cache: "no-store" }),
-            fetch(base + daily + `&models=bom_access_global`,  { cache: "no-store" }),
-            fetch(base + daily + `&models=ecmwf_ifs025`,       { cache: "no-store" }),
-            fetch("climatology.json?v=3", { cache: "no-cache" })
+            city.primaryModel
+                ? fetch(base + daily + `&models=${city.primaryModel}`, { cache: "no-store" })
+                : Promise.resolve(null),
+            fetch(base + daily + `&models=${FALLBACK_MODEL}`, { cache: "no-store" }),
+            fetch(city.climFile + "?v=4", { cache: "no-cache" }),
         ]);
+
         if (!currentRes.ok) throw new Error("Weather API returned " + currentRes.status);
-        if (!climRes.ok) throw new Error("Could not load climatology.json");
+        if (!climRes.ok)    throw new Error("Could not load " + city.climFile);
 
-        const fx      = await currentRes.json();
-        const fxBom   = bomRes.ok   ? await bomRes.json()   : null;
-        const fxEcmwf = ecmwfRes.ok ? await ecmwfRes.json() : null;
-        const clim    = await climRes.json();
+        const fx       = await currentRes.json();
+        const fxPrimary  = (primaryRes && primaryRes.ok)  ? await primaryRes.json()  : null;
+        const fxFallback = fallbackRes.ok ? await fallbackRes.json() : null;
+        const clim       = await climRes.json();
 
-        const bomMax   = fxBom?.daily?.temperature_2m_max?.[0];
-        const useBom   = typeof bomMax === "number";
-        const fxDaily  = useBom ? fxBom : fxEcmwf;
-        const modelLabel = useBom ? "BOM ACCESS-G" : "ECMWF IFS 0.25°";
-        if (!fxDaily) throw new Error("Neither BOM nor ECMWF forecast data is available");
+        const primaryMax = fxPrimary?.daily?.temperature_2m_max?.[0];
+        const usePrimary = typeof primaryMax === "number";
+        const fxDaily    = usePrimary ? fxPrimary : fxFallback;
+        const modelLabel = MODEL_NAMES[usePrimary ? city.primaryModel : FALLBACK_MODEL] || FALLBACK_MODEL;
+        if (!fxDaily) throw new Error("No forecast data available");
 
-        const dateStr = fxDaily.daily.time[0];            // YYYY-MM-DD (Melbourne local)
-        const d = new Date(dateStr + "T00:00:00");
-        const month = d.getMonth() + 1, dayNum = d.getDate();
-        const day = clim.days.find(x => x.month === month && x.day === dayNum)
-                 || clim.days.find(x => x.month === month && x.day === 28); // Feb-29 fallback
+        const dateStr = fxDaily.daily.time[0];
+        const [yr, mo, dy] = dateStr.split("-").map(Number);
+        const day = clim.days.find(x => x.month === mo && x.day === dy)
+                 || clim.days.find(x => x.month === mo && x.day === 28);
 
         const currentTemp  = fx.current.temperature_2m;
         const forecastMax  = fxDaily.daily.temperature_2m_max[0];
         const forecastMin  = fxDaily.daily.temperature_2m_min[0];
         const forecastRain = fxDaily.daily.precipitation_sum[0] || 0;
 
-        // rainfall since 9am local: sum hourly precip from 09:00 up to the current hour
-        let since9 = 0;
-        if (fx.hourly && fx.hourly.precipitation) {
+        // Sum all hourly precipitation recorded so far today (midnight to current hour).
+        let rainToday = 0;
+        if (fx.hourly?.precipitation) {
             const curHour = parseInt(fx.current.time.slice(11, 13), 10);
             fx.hourly.time.forEach((t, i) => {
-                const h = parseInt(t.slice(11, 13), 10);
-                if (h >= 9 && h <= curHour) since9 += fx.hourly.precipitation[i] || 0;
+                if (parseInt(t.slice(11, 13), 10) <= curHour)
+                    rainToday += fx.hourly.precipitation[i] || 0;
             });
         }
-        since9 = Math.round(since9 * 10) / 10;
+        rainToday = Math.round(rainToday * 10) / 10;
 
-        const sigma = (forecastMax - day.mean) / day.std;
-        const rank = Math.round(rankFromPercentiles(forecastMax, day));
-        const desc = verdictText(sigma);
+        const sigma    = (forecastMax - day.mean) / day.std;
+        const rank     = Math.round(rankFromPercentiles(forecastMax, day));
+        const desc     = verdictText(sigma);
         const rainDesc = rainVerdictText(forecastRain, day);
 
-        const niceDate = d.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-        const fetchedAt = new Date().toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit", timeZone: "Australia/Melbourne" });
+        const niceDate = new Date(yr, mo - 1, dy).toLocaleDateString("en-AU", {
+            weekday: "long", day: "numeric", month: "long", year: "numeric"
+        });
+        const fetchedAt = new Date().toLocaleTimeString("en-AU", {
+            hour: "2-digit", minute: "2-digit", timeZone: city.tz
+        });
+        const tzAbbr = Intl.DateTimeFormat("en", { timeZone: city.tz, timeZoneName: "short" })
+            .formatToParts(new Date()).find(p => p.type === "timeZoneName")?.value || "";
+
         const recDate = iso => {
             const rd = new Date((iso || "") + "T00:00:00");
             return isNaN(rd) ? "&mdash;" : rd.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
@@ -400,13 +465,13 @@ async function main() {
         content.innerHTML = `
             <div class="date-stamp">
                 <span><strong>${niceDate}</strong></span>
-                <span class="fetch-time">${modelLabel} &middot; fetched at ${fetchedAt} AEST</span>
+                <span class="fetch-time">${modelLabel} &middot; fetched at ${fetchedAt} ${tzAbbr}</span>
             </div>
             <div class="now">
                 <div class="stat"><div class="label">Right now</div><div class="value">${fmt(currentTemp)}<small>&deg;C</small></div></div>
                 <div class="stat"><div class="label">Forecast high</div><div class="value">${fmt(forecastMax)}<small>&deg;C</small></div></div>
                 <div class="stat"><div class="label">Forecast low</div><div class="value">${fmt(forecastMin)}<small>&deg;C</small></div></div>
-                <div class="stat"><div class="label">Rain since 9am</div><div class="value">${fmt(since9)}<small>mm</small></div></div>
+                <div class="stat"><div class="label">Rain today</div><div class="value">${fmt(rainToday)}<small>mm</small></div></div>
                 <div class="stat"><div class="label">Rain forecast</div><div class="value">${fmt(forecastRain)}<small>mm</small></div></div>
             </div>
 
@@ -428,14 +493,14 @@ async function main() {
                 <p class="hint">${niceDate} &middot; &plusmn;7-day window, 1990&ndash;2024 (${day.n} days).</p>
                 <div class="charts">
                     <div class="chart"><h3>Max temperature</h3>${tempChart(day, forecastMax, currentTemp)}</div>
-                    <div class="chart"><h3>Rainfall</h3>${rainChart(day, forecastRain, since9)}</div>
+                    <div class="chart"><h3>Rainfall</h3>${rainChart(day, forecastRain, rainToday)}</div>
                 </div>
                 <div class="legend">
                     <span><i class="swatch" style="background:var(--band-outer)"></i> outer range (to 97.5%)</span>
                     <span><i class="swatch" style="background:var(--band-inner)"></i> inner range (to 84%)</span>
                     <span><i class="swatch line" style="border-color:var(--median)"></i> median</span>
                     <span><i class="swatch line" style="border-color:var(--forecast)"></i> forecast</span>
-                    <span><i class="swatch line" style="border-color:var(--current)"></i> current</span>
+                    <span><i class="swatch line" style="border-color:var(--current)"></i> current / today</span>
                     <span><i class="swatch line" style="border-color:var(--forecast);border-top-style:dashed"></i> record high / wettest</span>
                     <span><i class="swatch line" style="border-color:var(--accent-light);border-top-style:dashed"></i> record low</span>
                 </div>
@@ -486,15 +551,27 @@ async function main() {
             </div>`;
 
         document.getElementById("meta").innerHTML =
-            `Live conditions from <a href="https://open-meteo.com/">Open-Meteo</a> &middot; rainfall since 9am summed from hourly data. `
+            `Live conditions from <a href="https://open-meteo.com/">Open-Meteo</a>. `
             + `Climatology: ${clim.meta.source}, ${clim.meta.period}, ${clim.meta.variable}. `
             + `&sigma; (temperature only) is the standard deviation of historical daily-max temperatures in a &plusmn;${clim.meta.window_days}-day window.`;
+
     } catch (err) {
         content.innerHTML = `<div class="error">Couldn&rsquo;t load the weather: ${err.message}</div>`;
     }
 }
 
-main();
+document.querySelectorAll(".city-btn").forEach(btn => {
+    btn.addEventListener("click", () => loadCity(btn.dataset.city));
+});
+
+// Restore previously selected city, default to Melbourne.
+const savedCity = localStorage.getItem("weatherCity") || "melbourne";
+if (savedCity !== "melbourne") {
+    document.querySelectorAll(".city-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.city === savedCity);
+    });
+}
+loadCity(savedCity);
 </script>
 </body>
 </html>
