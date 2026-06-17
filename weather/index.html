@@ -338,28 +338,41 @@ async function main() {
     try {
         // _t rounded to the hour busts the browser cache without hammering the API
         const cacheBust = Math.floor(Date.now() / 3_600_000);
-        const fxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
-            + `&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`
-            + `&hourly=precipitation&timezone=Australia%2FMelbourne&forecast_days=1&_t=${cacheBust}`;
-        const [fxRes, climRes] = await Promise.all([
-            fetch(fxUrl, { cache: "no-store" }),
+        const base = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
+            + `&timezone=Australia%2FMelbourne&forecast_days=1&_t=${cacheBust}`;
+        const daily = `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum`;
+        // Fetch current/hourly conditions (best_match, always available) and both
+        // forecast models in parallel, then prefer BOM if it has data.
+        const [currentRes, bomRes, ecmwfRes, climRes] = await Promise.all([
+            fetch(base + `&current=temperature_2m,precipitation&hourly=precipitation`, { cache: "no-store" }),
+            fetch(base + daily + `&models=bom_access_global`,  { cache: "no-store" }),
+            fetch(base + daily + `&models=ecmwf_ifs025`,       { cache: "no-store" }),
             fetch("climatology.json?v=3", { cache: "no-cache" })
         ]);
-        if (!fxRes.ok) throw new Error("Weather API returned " + fxRes.status);
+        if (!currentRes.ok) throw new Error("Weather API returned " + currentRes.status);
         if (!climRes.ok) throw new Error("Could not load climatology.json");
-        const fx = await fxRes.json();
-        const clim = await climRes.json();
 
-        const dateStr = fx.daily.time[0];                 // YYYY-MM-DD (Melbourne local)
+        const fx      = await currentRes.json();
+        const fxBom   = bomRes.ok   ? await bomRes.json()   : null;
+        const fxEcmwf = ecmwfRes.ok ? await ecmwfRes.json() : null;
+        const clim    = await climRes.json();
+
+        const bomMax   = fxBom?.daily?.temperature_2m_max?.[0];
+        const useBom   = typeof bomMax === "number";
+        const fxDaily  = useBom ? fxBom : fxEcmwf;
+        const modelLabel = useBom ? "BOM ACCESS-G" : "ECMWF IFS 0.25°";
+        if (!fxDaily) throw new Error("Neither BOM nor ECMWF forecast data is available");
+
+        const dateStr = fxDaily.daily.time[0];            // YYYY-MM-DD (Melbourne local)
         const d = new Date(dateStr + "T00:00:00");
         const month = d.getMonth() + 1, dayNum = d.getDate();
         const day = clim.days.find(x => x.month === month && x.day === dayNum)
                  || clim.days.find(x => x.month === month && x.day === 28); // Feb-29 fallback
 
-        const currentTemp = fx.current.temperature_2m;
-        const forecastMax = fx.daily.temperature_2m_max[0];
-        const forecastMin = fx.daily.temperature_2m_min[0];
-        const forecastRain = fx.daily.precipitation_sum[0] || 0;
+        const currentTemp  = fx.current.temperature_2m;
+        const forecastMax  = fxDaily.daily.temperature_2m_max[0];
+        const forecastMin  = fxDaily.daily.temperature_2m_min[0];
+        const forecastRain = fxDaily.daily.precipitation_sum[0] || 0;
 
         // rainfall since 9am local: sum hourly precip from 09:00 up to the current hour
         let since9 = 0;
@@ -387,7 +400,7 @@ async function main() {
         content.innerHTML = `
             <div class="date-stamp">
                 <span><strong>${niceDate}</strong></span>
-                <span class="fetch-time">fetched at ${fetchedAt} AEST</span>
+                <span class="fetch-time">${modelLabel} &middot; fetched at ${fetchedAt} AEST</span>
             </div>
             <div class="now">
                 <div class="stat"><div class="label">Right now</div><div class="value">${fmt(currentTemp)}<small>&deg;C</small></div></div>
